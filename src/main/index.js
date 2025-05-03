@@ -75,14 +75,23 @@ let mainWindow;
 // Create the main application window
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1000,
+    width: 1200,
     height: 800,
+    useContentSize: true, // Makes width/height dimensions apply to the web content area
+    backgroundColor: '#f5f5f5',
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       webviewTag: true,
       webSecurity: false, // Required for Cross-Origin requests
+      zoomFactor: 1.0 // Prevents automatic scaling
     }
+  });
+
+  // Ensure window size is as expected after creation
+  mainWindow.once('ready-to-show', () => {
+    // Force the window to be the correct size
+    mainWindow.setContentSize(1200, 800, false);
   });
 
   // Load the application's HTML file

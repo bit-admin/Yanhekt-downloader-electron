@@ -18,6 +18,8 @@ const startDownloadBtn = document.getElementById('start-download-btn');
 const downloadAudioCheckbox = document.getElementById('download-audio');
 const activeDownloads = document.getElementById('active-downloads');
 const openDownloadFolderBtn = document.getElementById('open-download-folder');
+// 添加URL显示栏引用
+const urlDisplay = document.getElementById('url-display');
 // 添加新的DOM元素引用
 const downloadPathInput = document.getElementById('download-path');
 const selectDownloadPathBtn = document.getElementById('select-download-path-btn');
@@ -84,6 +86,20 @@ function setupWebviewEvents() {
     if (e.url) {
       console.log('拦截新窗口:', e.url);
       safeLoadURL(e.url);
+    }
+  });
+  
+  // 监听导航事件以更新URL显示
+  webview.addEventListener('did-navigate', (event) => {
+    if (event.url) {
+      urlDisplay.textContent = event.url;
+    }
+  });
+  
+  // 监听页内导航事件以更新URL显示
+  webview.addEventListener('did-navigate-in-page', (event) => {
+    if (event.url) {
+      urlDisplay.textContent = event.url;
     }
   });
   

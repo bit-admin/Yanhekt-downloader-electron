@@ -42,7 +42,8 @@ body {
 
 /* 左侧面板 */
 .left-panel {
-  width: 50%;
+  width: 360px;
+  flex-shrink: 0;
   padding: 20px;
   background-color: var(--card-bg);
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
@@ -57,11 +58,12 @@ h1 {
   border-bottom: 2px solid var(--border-color);
   padding-bottom: 10px;
   font-weight: 600;
+  text-align: center;
 }
 
 /* 右侧面板 */
 .right-panel {
-  width: 50%;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
@@ -70,12 +72,28 @@ h1 {
 #webview-container {
   flex-grow: 1;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 webview {
   width: 100%;
   height: 100%;
   border: none;
+  flex-grow: 1;
+}
+
+/* URL显示栏 */
+.url-display {
+  background-color: #f5f5f5;
+  padding: 8px 12px;
+  font-size: 10px;
+  color: var(--secondary-color);
+  border-top: 1px solid var(--border-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: monospace;
 }
 
 /* 卡片模块 */
@@ -108,7 +126,132 @@ h3 {
   margin: 15px 0 10px;
 }
 
-/* 输入组 */
+.app-title {
+  font-size: 1.3em;
+  color: var(--primary-color);
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-align: center;
+  letter-spacing: 1px;
+  border-bottom: none;
+}
+.section.compact-section {
+  margin-bottom: 14px;
+  padding: 14px 14px 10px 14px;
+  border-radius: 10px;
+  box-shadow: none;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.section-title {
+  font-size: 1.08em;
+  color: var(--primary-color);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.compact-form, .compact-input {
+  margin-bottom: 8px;
+  padding: 0;
+}
+.input-group.compact-input label {
+  margin-bottom: 3px;
+  font-size: 0.98em;
+}
+.input-group.compact-input input[type="text"] {
+  padding: 7px 8px;
+  font-size: 13px;
+  border-radius: 5px;
+}
+.hint-text {
+  font-size: 11px;
+  color: var(--light-text);
+  margin: 2px 0 0 0;
+}
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.btn-row button {
+  flex: 1 1 0;
+  min-width: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+}
+.download-options.compact-options {
+  margin-top: 6px;
+  margin-bottom: 0;
+  padding: 0;
+}
+.radio-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.radio-row label {
+  font-size: 0.98em;
+  margin-bottom: 0;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.audio-checkbox {
+  margin-left: 10px;
+}
+#start-download-btn {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 8px 0;
+  font-size: 1em;
+}
+.download-path-section.compact-input {
+  margin-bottom: 8px;
+  padding: 0;
+}
+.path-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.path-input-group input[type="text"] {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 7px 8px;
+  font-size: 13px;
+  border-radius: 5px;
+}
+#select-download-path-btn {
+  padding: 7px 10px;
+  font-size: 12px;
+  border-radius: 5px;
+}
+#open-download-folder {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 0;
+  font-size: 1em;
+}
+@media (max-width: 600px) {
+  .left-panel {
+    width: 100vw;
+    padding: 8px;
+  }
+  .section.compact-section {
+    padding: 8px 6px 6px 6px;
+  }
+  .app-title {
+    font-size: 1.1em;
+    margin-bottom: 6px;
+  }
+}
 .input-group {
   margin-bottom: 18px;
 }
@@ -346,8 +489,7 @@ button:disabled {
 
 /* 认证表单 */
 .auth-form {
-  max-width: 500px;
-  margin: 0 auto;
+  max-width: 100%;
 }
 
 /* 路径输入组 */

@@ -9,90 +9,72 @@
 <body>
   <div class="container">
     <div class="left-panel">
-      <h1>延河课堂视频下载器</h1>
-      
-      <div class="section" id="auth-section">
-        <h2>账号认证</h2>
-        <div class="auth-form">
-          <div class="input-group">
-            <label for="auth-token">认证令牌 Token</label>
-            <input type="text" id="auth-token" placeholder="请输入认证令牌">
-            <p class="hint-text">
-              请先在右侧登录延河课堂后获取
-            </p>
+      <h1 class="app-title">延河课堂下载器</h1>
+      <div class="section compact-section" id="auth-section">
+        <div class="section-header">
+          <span class="section-title">认证</span>
+        </div>
+        <div class="auth-form compact-form">
+          <div class="input-group compact-input">
+            <label for="auth-token">令牌</label>
+            <input type="text" id="auth-token" placeholder="输入认证令牌">
+            <p class="hint-text">右侧网页登录后可自动获取</p>
           </div>
-          <button id="save-auth-btn">保存认证信息</button>
-          <button id="auto-auth-btn" class="btn-secondary">从右侧网页自动获取</button>
+          <div class="btn-row">
+            <button id="save-auth-btn">保存</button>
+            <button id="auto-auth-btn" class="btn-secondary">自动获取</button>
+          </div>
           <p id="auth-status"></p>
         </div>
       </div>
-      
-      <div class="section" id="course-section">
-        <h2>课程信息</h2>
-        <div class="input-group">
-          <label for="course-id">课程 ID</label>
-          <input type="text" id="course-id" placeholder="请输入课程ID">
-          <p class="hint-text">
-            从课程信息界面的链接获取，形如：yanhekt.cn/course/12345
-          </p>
+      <div class="section compact-section" id="course-section">
+        <div class="section-header">
+          <span class="section-title">课程</span>
         </div>
-        <button id="get-course-btn">获取课程信息</button>
-        <button id="extract-course-id-btn" class="btn-secondary">从右侧网页提取</button>
-        
+        <div class="input-group compact-input">
+          <label for="course-id">课程ID</label>
+          <input type="text" id="course-id" placeholder="输入课程ID">
+          <p class="hint-text">课程链接如：yanhekt.cn/course/12345</p>
+        </div>
+        <div class="btn-row">
+          <button id="get-course-btn">获取课程</button>
+          <button id="extract-course-id-btn" class="btn-secondary">网页提取</button>
+        </div>
         <div id="course-info" style="display: none;">
           <h3 id="course-name"></h3>
           <p id="course-professor"></p>
-          
           <div class="video-list" id="video-list"></div>
-          
-          <div class="download-options">
-            <div class="checkbox-group">
-              <label>
-                <input type="radio" name="video-source" value="camera" checked> 下载摄像头视频
-              </label>
+          <div class="download-options compact-options">
+            <div class="radio-row">
+              <label><input type="radio" name="video-source" value="camera" checked>摄像头</label>
+              <label><input type="radio" name="video-source" value="screen">屏幕录制</label>
+              <label class="audio-checkbox"><input type="checkbox" id="download-audio" checked>音频</label>
             </div>
-            <div class="checkbox-group">
-              <label>
-                <input type="radio" name="video-source" value="screen"> 下载屏幕录制
-              </label>
-            </div>
-            <div class="checkbox-group">
-              <label>
-                <input type="checkbox" id="download-audio" checked> 下载音频
-              </label>
-            </div>
-            
-            <button id="start-download-btn" disabled>开始下载</button>
+            <button id="start-download-btn" disabled>下载选中</button>
           </div>
         </div>
       </div>
-      
-      <div class="section" id="downloads-section">
-        <h2>下载列表</h2>
-        
-        <!-- 添加下载路径设置部分 -->
-        <div class="download-path-section">
-          <div class="input-group">
-            <label for="download-path">下载保存位置</label>
-            <div class="path-input-group">
-              <input type="text" id="download-path" readonly>
-              <button id="select-download-path-btn" class="btn-secondary">更改</button>
-            </div>
-            <p class="hint-text">
-              默认保存在下载文件夹内的"Yanhe"目录中
-            </p>
-          </div>
+      <div class="section compact-section" id="downloads-section">
+        <div class="section-header">
+          <span class="section-title">下载</span>
         </div>
-        
+        <div class="download-path-section compact-input">
+          <label for="download-path">保存位置</label>
+          <div class="path-input-group">
+            <input type="text" id="download-path" readonly>
+            <button id="select-download-path-btn" class="btn-secondary">更改</button>
+          </div>
+          <p class="hint-text">默认：下载文件夹/"Yanhe"</p>
+        </div>
         <div id="active-downloads"></div>
-        
-        <button id="open-download-folder" class="btn-secondary">打开下载文件夹</button>
+        <button id="open-download-folder" class="btn-secondary">打开文件夹</button>
       </div>
     </div>
     
     <div class="right-panel">
       <div id="webview-container">
         <webview id="yanhekt-webview" src="https://www.yanhekt.cn" autosize="on"></webview>
+        <div class="url-display" id="url-display">https://www.yanhekt.cn</div>
       </div>
     </div>
   </div>
