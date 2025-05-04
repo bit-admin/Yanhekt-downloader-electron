@@ -77,7 +77,7 @@ let mainWindow;
 // Create the main application window
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1200,
+    width: 1280,
     height: 800,
     useContentSize: true, // Makes width/height dimensions apply to the web content area
     backgroundColor: '#f5f5f5',
@@ -146,7 +146,7 @@ function createApplicationMenu() {
         {
           label: '访问 GitHub 主页',
           click: async () => {
-            await shell.openExternal('https://github.com/bit-admin/AutoSlides-extractor');
+            await shell.openExternal('https://github.com/bit-admin/Yanhekt-downloader-electron');
           }
         },
         { type: 'separator' },

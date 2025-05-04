@@ -38,16 +38,122 @@ body {
 .container {
   display: flex;
   height: 100vh;
+  position: relative; /* 为了正确定位下载弹出层 */
 }
 
 /* 左侧面板 */
 .left-panel {
   width: 380px;
   flex-shrink: 0;
-  padding: 20px;
   background-color: var(--card-bg);
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 防止内容溢出 */
+  position: relative; /* 用于定位内部元素 */
+}
+
+/* 左侧可滚动内容区域 */
+.left-panel-content {
+  flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  padding-bottom: 10px; /* 给底部留点空间 */
+}
+
+/* 左侧固定底部区域 */
+.left-panel-footer {
+  border-top: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+  z-index: 10;
+  padding: 12px 20px;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* 将下载列表固定在左侧面板底部 */
+#downloads-list {
+  margin-top: auto; /* 将其推到flex容器底部 */
+}
+
+/* 下载列表头部样式 */
+.downloads-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 图标按钮样式 */
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary-color);
+  transition: color 0.2s, transform 0.2s;
+  margin: 0;
+}
+
+.icon-btn:hover {
+  color: var(--primary-color);
+  transform: scale(1.1);
+  background: none;
+}
+
+.icon-btn:active {
+  transform: scale(0.95);
+}
+
+/* 下载列表弹出层 */
+.downloads-popup {
+  position: fixed;
+  right: -500px; /* 默认隐藏在右侧 */
+  top: 0;
+  width: 500px;
+  height: 100vh;
+  background-color: var(--card-bg);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  transition: right 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.downloads-popup.show {
+  right: 0;
+}
+
+.downloads-popup-header {
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.downloads-popup-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.downloads-popup-header .icon-btn {
+  color: white;
+}
+
+.downloads-popup-header .icon-btn:hover {
+  color: #f0f0f0;
+}
+
+/* 下载项目容器 */
+#active-downloads {
+  padding: 10px 15px;
+  overflow-y: auto;
+  flex-grow: 1;
 }
 
 /* 右侧面板 */
@@ -288,16 +394,6 @@ button:disabled {
   background-color: var(--secondary-dark);
 }
 
-/* 主要操作按钮样式 */
-.primary-action {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.primary-action:hover {
-  background-color: var(--primary-dark);
-}
-
 /* 视频列表 */
 .video-list {
   max-height: 300px;
@@ -385,19 +481,49 @@ button:disabled {
   margin-top: 15px;
 }
 
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
 .progress-bar {
   height: 8px;
   background-color: #e1e1e1;
   border-radius: 4px;
   overflow: hidden;
-  margin-top: 8px;
-  margin-bottom: 12px;
+  flex-grow: 1;
 }
 
 .progress-bar-fill {
   height: 100%;
   background-color: var(--primary-color);
   transition: width 0.3s ease;
+}
+
+.cancel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--secondary-color);
+  transition: all 0.2s ease;
+}
+
+.cancel-icon:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #ff3d00;
+  transform: scale(1.1);
+}
+
+.cancel-icon:active {
+  transform: scale(0.95);
 }
 
 /* 下载区域 */
@@ -454,6 +580,52 @@ button:disabled {
 .status-error {
   background-color: var(--status-error-bg);
   color: var(--status-error-text);
+}
+
+/* 通知样式 */
+.notification {
+  padding: 8px 12px;
+  border-radius: 4px;
+  background-color: #e3f2fd;
+  color: var(--primary-color);
+  margin-top: 10px;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.notification::before {
+  content: "ℹ";
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+#auth-status {
+  font-size: 12px;
+  margin: 0;
+}
+
+.course-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+
+/* 课程名称样式，防止换行并使用省略号 */
+#course-name {
+  margin: 0;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;  /* 控制宽度，留出空间给教师名称 */
+}
+
+/* 使用中文省略号 */
+#course-name.overflow {
+  text-overflow: ellipsis;
 }
 
 /* 提示文本 */
@@ -533,37 +705,4 @@ button:disabled {
   display: flex;
   align-items: center;
   animation: fadeIn 0.3s ease;
-}
-
-.notification::before {
-  content: "ℹ";
-  margin-right: 8px;
-  font-weight: bold;
-}
-
-#auth-status {
-  font-size: 12px;
-  margin: 0;
-}
-
-.course-info-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0;
-}
-
-/* 课程名称样式，防止换行并使用省略号 */
-#course-name {
-  margin: 0;
-  font-size: 16px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 65%;  /* 控制宽度，留出空间给教师名称 */
-}
-
-/* 使用中文省略号 */
-#course-name.overflow {
-  text-overflow: ellipsis;
 }

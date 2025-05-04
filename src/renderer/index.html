@@ -3,78 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>延河课堂视频下载器</title>
+  <title>Yanhekt Downloader</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <div class="container">
     <div class="left-panel">
-      <div class="section compact-section" id="downloads-section">
-        <div class="section-header">
-          <span class="section-title">下载目录</span>
-        </div>
-        <div class="download-path-section compact-input">
-          <div class="path-input-group">
-            <input type="text" id="download-path" readonly>
-            <button id="select-download-path-btn" class="btn-secondary">更改</button>
+      <!-- 新增左侧可滚动内容区域 -->
+      <div class="left-panel-content">
+        <div class="section compact-section" id="downloads-section">
+          <div class="section-header">
+            <span class="section-title">下载目录</span>
           </div>
+          <div class="download-path-section compact-input">
+            <div class="path-input-group">
+              <input type="text" id="download-path" readonly>
+              <button id="select-download-path-btn" class="btn-secondary">更改</button>
+            </div>
+          </div>
+          <button id="open-download-folder" class="btn-secondary">打开文件夹</button>
         </div>
-        <button id="open-download-folder" class="btn-secondary">打开文件夹</button>
-      </div>
 
-      <div class="section compact-section" id="auth-section">
-        <div class="section-header">
-          <span class="section-title">认证信息</span>
-          <p id="auth-status"></p>
-        </div>
-        <div class="auth-form compact-form">
-          <div class="input-group compact-input">
-            <input type="text" id="auth-token" placeholder="输入 Token 或在右侧网页登录后自动获取">
+        <div class="section compact-section" id="auth-section">
+          <div class="section-header">
+            <span class="section-title">认证信息</span>
+            <p id="auth-status"></p>
           </div>
-          <div class="btn-row">
-            <button id="save-auth-btn">保存</button>
-            <button id="auto-auth-btn" class="btn-secondary">自动获取</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="section compact-section" id="course-section">
-        <div class="section-header">
-          <span class="section-title">课程信息</span>
-        </div>
-        <div class="input-group compact-input">
-          <input type="text" id="course-id" placeholder="输入课程 ID 搜索或从右侧网页中提取">
-        </div>
-        <div class="btn-row">
-          <button id="get-course-btn">搜索</button>
-          <button id="extract-course-id-btn" class="btn-secondary">网页提取</button>
-        </div>
-        <div id="course-info" style="display: none;">
-          <div class="course-info-header">
-            <h3 id="course-name"></h3>
-            <p id="course-professor"></p>
-          </div>
-          <div class="video-list" id="video-list"></div>
-          <div class="download-options compact-options">
-            <div class="radio-row">
-              <label><input type="radio" name="video-source" value="camera">摄像头</label>
-              <label><input type="radio" name="video-source" value="screen" checked>屏幕录制</label>
-              <label class="audio-checkbox"><input type="checkbox" id="download-audio">单独下载音频</label>
+          <div class="auth-form compact-form">
+            <div class="input-group compact-input">
+              <input type="text" id="auth-token" placeholder="输入 Token 或在右侧网页登录后自动获取">
             </div>
             <div class="btn-row">
-              <button id="select-all-btn">全选</button>
-              <button id="start-download-btn" class="btn-secondary" disabled>下载选中</button>
+              <button id="save-auth-btn">保存</button>
+              <button id="auto-auth-btn" class="btn-secondary">自动获取</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section compact-section" id="course-section">
+          <div class="section-header">
+            <span class="section-title">课程信息</span>
+          </div>
+          <div class="input-group compact-input">
+            <input type="text" id="course-id" placeholder="输入课程 ID 搜索或从右侧网页中提取">
+          </div>
+          <div class="btn-row">
+            <button id="get-course-btn">搜索</button>
+            <button id="extract-course-id-btn" class="btn-secondary">网页提取</button>
+          </div>
+          <div id="course-info" style="display: none;">
+            <div class="course-info-header">
+              <h3 id="course-name"></h3>
+              <p id="course-professor"></p>
+            </div>
+            <div class="video-list" id="video-list"></div>
+            <div class="download-options compact-options">
+              <div class="radio-row">
+                <label><input type="radio" name="video-source" value="camera">摄像头</label>
+                <label><input type="radio" name="video-source" value="screen" checked>屏幕录制</label>
+                <label class="audio-checkbox"><input type="checkbox" id="download-audio">单独下载音频</label>
+              </div>
+              <div class="btn-row">
+                <button id="select-all-btn">全选</button>
+                <button id="start-download-btn" class="btn-secondary" disabled>下载选中</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="section compact-section" id="downloads-list">
-        <div class="section-header">
+      <!-- 固定在底部的下载列表 -->
+      <div class="left-panel-footer">
+        <div class="downloads-list-header">
           <span class="section-title">下载列表</span>
+          <button id="expand-downloads-btn" class="icon-btn" title="展开下载列表">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
         </div>
-        <div id="active-downloads"></div>
       </div>
+    </div>
+    
+    <!-- 下载列表弹出层 -->
+    <div id="downloads-popup" class="downloads-popup">
+      <div class="downloads-popup-header">
+        <span class="downloads-popup-title">下载列表</span>
+        <button id="close-downloads-btn" class="icon-btn" title="关闭下载列表">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div id="active-downloads"></div>
     </div>
     
     <div class="right-panel">

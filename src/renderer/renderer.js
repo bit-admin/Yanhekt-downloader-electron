@@ -19,6 +19,9 @@ const startDownloadBtn = document.getElementById('start-download-btn');
 const downloadAudioCheckbox = document.getElementById('download-audio');
 const activeDownloads = document.getElementById('active-downloads');
 const openDownloadFolderBtn = document.getElementById('open-download-folder');
+const expandDownloadsBtn = document.getElementById('expand-downloads-btn'); // 展开下载列表按钮
+const closeDownloadsBtn = document.getElementById('close-downloads-btn'); // 关闭下载列表按钮
+const downloadsPopup = document.getElementById('downloads-popup'); // 下载列表弹出层
 // 添加URL显示栏引用
 const urlDisplay = document.getElementById('url-display');
 // 添加新的DOM元素引用
@@ -262,6 +265,10 @@ function setupEventListeners() {
   startDownloadBtn.addEventListener('click', startDownload);
   openDownloadFolderBtn.addEventListener('click', openDownloadFolder);
   
+  // 下载列表弹出层的展开和关闭事件
+  expandDownloadsBtn.addEventListener('click', toggleDownloadsPopup);
+  closeDownloadsBtn.addEventListener('click', toggleDownloadsPopup);
+  
   // 添加下载路径选择按钮事件监听
   selectDownloadPathBtn.addEventListener('click', selectDownloadPath);
   
@@ -477,8 +484,6 @@ function toggleSelectAllVideos() {
     // Deselect all videos
     selectedVideos.clear();
     selectAllBtn.textContent = '全选';
-    selectAllBtn.classList.remove('primary-action');
-    selectAllBtn.classList.add('btn-secondary');
     
     // Update UI to show deselected videos
     const videoItems = videoList.querySelectorAll('.video-item');
@@ -492,8 +497,6 @@ function toggleSelectAllVideos() {
       selectedVideos.add(index);
     });
     selectAllBtn.textContent = '取消全选';
-    selectAllBtn.classList.remove('btn-secondary');
-    selectAllBtn.classList.add('primary-action');
     
     // Update UI to show selected videos
     const videoItems = videoList.querySelectorAll('.video-item');
@@ -574,24 +577,36 @@ function createDownloadItem(id, name) {
   nameElement.appendChild(statusElement);
   
   const progressContainer = document.createElement('div');
-  progressContainer.className = 'progress-bar';
+  progressContainer.className = 'progress-container';
   
   const progressBar = document.createElement('div');
-  progressBar.className = 'progress-bar-fill';
-  progressBar.style.width = '0%';
-  progressContainer.appendChild(progressBar);
+  progressBar.className = 'progress-bar';
   
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn-secondary';
-  cancelBtn.textContent = '取消';
-  cancelBtn.style.marginTop = '5px';
-  cancelBtn.addEventListener('click', () => {
+  const progressBarFill = document.createElement('div');
+  progressBarFill.className = 'progress-bar-fill';
+  progressBarFill.style.width = '0%';
+  progressBar.appendChild(progressBarFill);
+  
+  // Create SVG cancel icon
+  const cancelIcon = document.createElement('div');
+  cancelIcon.className = 'cancel-icon';
+  cancelIcon.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  `;
+  cancelIcon.title = '取消下载';
+  cancelIcon.addEventListener('click', () => {
     cancelDownload(id);
   });
   
+  // Add progress bar and cancel icon to container
+  progressContainer.appendChild(progressBar);
+  progressContainer.appendChild(cancelIcon);
+  
   downloadItem.appendChild(nameElement);
   downloadItem.appendChild(progressContainer);
-  downloadItem.appendChild(cancelBtn);
   
   activeDownloads.appendChild(downloadItem);
   
@@ -707,6 +722,21 @@ async function cancelDownload(id) {
     }
   } else {
     alert('取消下载失败: ' + result.error);
+  }
+}
+
+// Toggle the downloads popup visibility
+function toggleDownloadsPopup() {
+  // Toggle the 'show' class on the downloads popup
+  downloadsPopup.classList.toggle('show');
+  
+  // 更新按钮图标方向（实际上是通过CSS变换实现）
+  if (downloadsPopup.classList.contains('show')) {
+    // 如果弹出窗口现在显示，更改按钮方向
+    expandDownloadsBtn.classList.add('rotated');
+  } else {
+    // 如果弹出窗口现在隐藏，恢复按钮方向
+    expandDownloadsBtn.classList.remove('rotated');
   }
 }
 
