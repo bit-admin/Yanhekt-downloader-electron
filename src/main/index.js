@@ -124,7 +124,7 @@ function createApplicationMenu() {
       submenu: [
         process.platform === 'darwin' 
           ? { role: 'about', label: 'About ' + app.name } 
-          : { label: 'About', click: () => app.showAboutPanel() },
+          : { label: 'About' + app.name, click: () => app.showAboutPanel() },
         { type: 'separator' },
         // macOS-specific project with conditional judgment
         ...(process.platform === 'darwin' ? [
