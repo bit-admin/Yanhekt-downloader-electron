@@ -173,14 +173,7 @@ webview {
 .audio-checkbox {
   margin-left: 10px;
 }
-#start-download-btn {
-  width: 100%;
-  height: 30px;
-  margin-top: 0;
-  margin-bottom: 0;
-  padding: 8px 0;
-  font-size: 14px;
-}
+
 .download-path-section.compact-input {
   margin-bottom: 8px;
   padding: 0;
@@ -293,6 +286,16 @@ button:disabled {
 
 .btn-secondary:hover {
   background-color: var(--secondary-dark);
+}
+
+/* 主要操作按钮样式 */
+.primary-action {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.primary-action:hover {
+  background-color: var(--primary-dark);
 }
 
 /* 视频列表 */

@@ -9,6 +9,19 @@
 <body>
   <div class="container">
     <div class="left-panel">
+      <div class="section compact-section" id="downloads-section">
+        <div class="section-header">
+          <span class="section-title">下载目录</span>
+        </div>
+        <div class="download-path-section compact-input">
+          <div class="path-input-group">
+            <input type="text" id="download-path" readonly>
+            <button id="select-download-path-btn" class="btn-secondary">更改</button>
+          </div>
+        </div>
+        <button id="open-download-folder" class="btn-secondary">打开文件夹</button>
+      </div>
+
       <div class="section compact-section" id="auth-section">
         <div class="section-header">
           <span class="section-title">认证信息</span>
@@ -24,6 +37,7 @@
           </div>
         </div>
       </div>
+
       <div class="section compact-section" id="course-section">
         <div class="section-header">
           <span class="section-title">课程信息</span>
@@ -47,21 +61,12 @@
               <label><input type="radio" name="video-source" value="screen" checked>屏幕录制</label>
               <label class="audio-checkbox"><input type="checkbox" id="download-audio">单独下载音频</label>
             </div>
-            <button id="start-download-btn" disabled>下载选中</button>
+            <div class="btn-row">
+              <button id="select-all-btn">全选</button>
+              <button id="start-download-btn" class="btn-secondary" disabled>下载选中</button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="section compact-section" id="downloads-section">
-        <div class="section-header">
-          <span class="section-title">下载目录</span>
-        </div>
-        <div class="download-path-section compact-input">
-          <div class="path-input-group">
-            <input type="text" id="download-path" readonly>
-            <button id="select-download-path-btn" class="btn-secondary">更改</button>
-          </div>
-        </div>
-        <button id="open-download-folder" class="btn-secondary">打开文件夹</button>
       </div>
 
       <div class="section compact-section" id="downloads-list">

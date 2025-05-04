@@ -14,6 +14,7 @@ const courseInfo = document.getElementById('course-info');
 const courseName = document.getElementById('course-name');
 const courseProfessor = document.getElementById('course-professor');
 const videoList = document.getElementById('video-list');
+const selectAllBtn = document.getElementById('select-all-btn'); // 添加全选按钮引用
 const startDownloadBtn = document.getElementById('start-download-btn');
 const downloadAudioCheckbox = document.getElementById('download-audio');
 const activeDownloads = document.getElementById('active-downloads');
@@ -257,6 +258,7 @@ function setupEventListeners() {
   extractCourseIdBtn.addEventListener('click', extractCourseId);
   
   // Download section
+  selectAllBtn.addEventListener('click', toggleSelectAllVideos); // 添加全选按钮的事件监听
   startDownloadBtn.addEventListener('click', startDownload);
   openDownloadFolderBtn.addEventListener('click', openDownloadFolder);
   
@@ -426,7 +428,7 @@ function displayCourseInfo(courseData) {
       const nameLength = courseData.name.length;
       const estimatedVisibleChars = Math.floor(nameLength * (courseName.clientWidth / courseName.scrollWidth)) - 2;
       if (estimatedVisibleChars > 0) {
-        courseName.textContent = courseData.name.substring(0, estimatedVisibleChars) + "……";
+        courseName.textContent = courseData.name.substring(0, estimatedVisibleChars) + "…";
         courseName.classList.add('overflow');
       }
     }
@@ -461,6 +463,47 @@ function displayCourseInfo(courseData) {
   courseInfo.style.display = 'block';
   startDownloadBtn.disabled = true;
   selectedVideos.clear();
+}
+
+// Select or deselect all videos in the list
+function toggleSelectAllVideos() {
+  if (!currentCourse || !currentCourse.videoList || currentCourse.videoList.length === 0) return;
+  
+  const totalVideos = currentCourse.videoList.length;
+  const allSelected = selectedVideos.size === totalVideos;
+  
+  // Toggle between select all and deselect all
+  if (allSelected) {
+    // Deselect all videos
+    selectedVideos.clear();
+    selectAllBtn.textContent = '全选';
+    selectAllBtn.classList.remove('primary-action');
+    selectAllBtn.classList.add('btn-secondary');
+    
+    // Update UI to show deselected videos
+    const videoItems = videoList.querySelectorAll('.video-item');
+    videoItems.forEach(item => {
+      item.classList.remove('selected');
+    });
+  } else {
+    // Select all videos
+    selectedVideos.clear(); // Clear first to avoid duplicates
+    currentCourse.videoList.forEach((_, index) => {
+      selectedVideos.add(index);
+    });
+    selectAllBtn.textContent = '取消全选';
+    selectAllBtn.classList.remove('btn-secondary');
+    selectAllBtn.classList.add('primary-action');
+    
+    // Update UI to show selected videos
+    const videoItems = videoList.querySelectorAll('.video-item');
+    videoItems.forEach(item => {
+      item.classList.add('selected');
+    });
+  }
+  
+  // Enable/disable the download button
+  startDownloadBtn.disabled = selectedVideos.size === 0;
 }
 
 // Start downloading selected videos

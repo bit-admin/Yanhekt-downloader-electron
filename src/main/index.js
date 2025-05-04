@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell,  Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { M3u8Downloader } = require('../shared/m3u8dl');
@@ -117,8 +117,58 @@ function createWindow() {
   }
 }
 
+function createApplicationMenu() {
+  const template = [
+    {
+      label: app.name,
+      submenu: [
+        process.platform === 'darwin' 
+          ? { role: 'about', label: 'About ' + app.name } 
+          : { label: 'About', click: () => app.showAboutPanel() },
+        { type: 'separator' },
+        // macOS-specific project with conditional judgment
+        ...(process.platform === 'darwin' ? [
+          { type: 'separator' },
+          { role: 'services' },
+          { type: 'separator' },
+          { role: 'hide' },
+          { role: 'hideOthers' },
+          { role: 'unhide' },
+        ] : []),
+        { type: 'separator' },
+        { role: 'quit', label: 'Quit' }
+      ]
+    },
+    {
+      role: 'help',
+      label: 'Help',
+      submenu: [
+        {
+          label: '访问 GitHub 主页',
+          click: async () => {
+            await shell.openExternal('https://github.com/bit-admin/AutoSlides-extractor');
+          }
+        },
+        { type: 'separator' },
+        {
+          label: '想要从课程视频中获取课件？',
+          click: async () => {
+            await shell.openExternal('https://github.com/bit-admin/AutoSlides-extractor');
+          }
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
 // Create window when Electron has finished initializing
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  createApplicationMenu();
+});
 
 // Quit when all windows are closed
 app.on('window-all-closed', function() {
