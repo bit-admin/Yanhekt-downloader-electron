@@ -116,7 +116,6 @@ javascript:alert(JSON.parse(localStorage.auth).token)
 
 - 本软件开发者不对“延河课堂”平台内容的合法性、完整性或准确性作出任何保证。
 - 本软件开发者不对因用户使用本软件而导致的任何直接或间接损失（包括但不限于数据丢失、知识产权纠纷等）承担责任。
-- 本软件及所下载资源均以“现状”提供，开发者不对课程资源的完整性、准确性、及时性作任何担保。
 
 ## 许可证
 
@@ -124,4 +123,4 @@ javascript:alert(JSON.parse(localStorage.auth).token)
 
 ## 致谢
 
-- 特别感谢 [AuYang261/BIT_yanhe_download](https://github.com/AuYang261/BIT_yanhe_download) 项目提供的思路和参考
+特别感谢 [AuYang261/BIT_yanhe_download](https://github.com/AuYang261/BIT_yanhe_download) 项目提供的思路和参考。

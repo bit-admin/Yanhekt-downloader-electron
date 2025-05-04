@@ -359,7 +359,7 @@ async function autoExtractAuth() {
       authToken.value = extractedToken;
       await saveAuth();
     } else {
-      authStatus.textContent = '无法从网页获取认证信息，请先登录延河课堂';
+      authStatus.textContent = '无法获取认证信息，请先登录延河课堂';
       authStatus.style.color = 'red';
     }
   } catch (error) {

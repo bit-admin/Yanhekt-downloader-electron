@@ -140,6 +140,14 @@ function createApplicationMenu() {
       ]
     },
     {
+      label: 'View',
+      submenu: [
+        { role: 'reload', label: 'Reload' },
+        { role: 'forceReload', label: 'Force Reload' },
+        { role: 'toggleDevTools', label: 'Toggle Developer Tools' }
+      ]
+    },
+    {
       role: 'help',
       label: 'Help',
       submenu: [
