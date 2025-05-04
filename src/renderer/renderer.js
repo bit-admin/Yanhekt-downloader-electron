@@ -14,17 +14,15 @@ const courseInfo = document.getElementById('course-info');
 const courseName = document.getElementById('course-name');
 const courseProfessor = document.getElementById('course-professor');
 const videoList = document.getElementById('video-list');
-const selectAllBtn = document.getElementById('select-all-btn'); // 添加全选按钮引用
+const selectAllBtn = document.getElementById('select-all-btn');
 const startDownloadBtn = document.getElementById('start-download-btn');
 const downloadAudioCheckbox = document.getElementById('download-audio');
 const activeDownloads = document.getElementById('active-downloads');
 const openDownloadFolderBtn = document.getElementById('open-download-folder');
-const expandDownloadsBtn = document.getElementById('expand-downloads-btn'); // 展开下载列表按钮
-const closeDownloadsBtn = document.getElementById('close-downloads-btn'); // 关闭下载列表按钮
-const downloadsPopup = document.getElementById('downloads-popup'); // 下载列表弹出层
-// 添加URL显示栏引用
+const expandDownloadsBtn = document.getElementById('expand-downloads-btn');
+const closeDownloadsBtn = document.getElementById('close-downloads-btn');
+const downloadsPopup = document.getElementById('downloads-popup');
 const urlDisplay = document.getElementById('url-display');
-// 添加新的DOM元素引用
 const downloadPathInput = document.getElementById('download-path');
 const selectDownloadPathBtn = document.getElementById('select-download-path-btn');
 
@@ -32,17 +30,17 @@ const selectDownloadPathBtn = document.getElementById('select-download-path-btn'
 let currentCourse = null;
 let selectedVideos = new Set();
 let downloads = new Map();
-let currentDownloadPath = ''; // 存储当前下载路径
+let currentDownloadPath = '';
 
 /**
- * 格式化视频文件名
- * 从 "第X周 星期X 第X大节" 转换为 "Week_X_Day"
- * 例如：从 "第6周 星期四 第4大节" 转换为 "Week_6_Thu"
- * @param {string} title - 原始视频标题
- * @returns {string} 格式化后的文件名部分
+ * Format video file name
+ * Convert from "Week X Day X Session X" to "Week_X_Day"
+ * For example: from "Week 6 Thursday Session 4" to "Week_6_Thu"
+ * @param {string} title - Original video title
+ * @returns {string} Formatted file name part
  */
 function formatVideoName(title) {
-  // 处理星期几的映射关系
+  // Handling the mapping relationship of days of the week
   const dayMap = {
     '星期一': 'Mon',
     '星期二': 'Tue',
@@ -56,11 +54,11 @@ function formatVideoName(title) {
   
   let formattedName = title;
   
-  // 提取周数
+  // Extract week number
   const weekMatch = title.match(/第(\d+)周/);
   let weekNumber = weekMatch ? weekMatch[1] : '';
   
-  // 提取星期几
+  // Extract the day of the week
   let dayName = '';
   for (const chineseDay in dayMap) {
     if (title.includes(chineseDay)) {
@@ -69,7 +67,7 @@ function formatVideoName(title) {
     }
   }
   
-  // 如果成功提取了周数和星期几，则构建新格式
+  // If the week number and day of the week are successfully extracted, construct a new format.
   if (weekNumber && dayName) {
     formattedName = `Week_${weekNumber}_${dayName}`;
   }
@@ -77,15 +75,15 @@ function formatVideoName(title) {
   return formattedName;
 }
 
-// 安全地加载URL，用于拦截处理
+// Safely load URL for interception processing
 function safeLoadURL(url) {
   if (!url) return;
   
   try {
-    // 确保URL是有效的
+    // Ensure the URL is valid
     new URL(url);
     
-    // 加载URL
+    // Load URL
     webview.src = url;
     console.log('Safely loading URL:', url);
   } catch (error) {
@@ -103,17 +101,17 @@ async function init() {
     authStatus.style.color = 'green';
   }
   
-  // 加载并显示当前下载路径
+  // Load and display the current download path
   loadDownloadPath();
   
   // Set up event listeners
   setupEventListeners();
   
-  // 设置webview事件处理
+  // Set up webview event handling
   setupWebviewEvents();
 }
 
-// 加载并显示下载路径
+// Load and display download path
 async function loadDownloadPath() {
   try {
     currentDownloadPath = await ipcRenderer.invoke('get-download-path');
@@ -125,9 +123,9 @@ async function loadDownloadPath() {
   }
 }
 
-// 设置webview相关的事件处理
+// Set up event handling related to WebView
 function setupWebviewEvents() {
-  // 拦截新窗口打开，在当前webview中打开
+  // Block new window from opening, open in the current webview
   webview.addEventListener('new-window', (e) => {
     e.preventDefault();
     if (e.url) {
@@ -136,30 +134,30 @@ function setupWebviewEvents() {
     }
   });
   
-  // 监听导航事件以更新URL显示
+  // Listen for navigation events to update URL display
   webview.addEventListener('did-navigate', (event) => {
     if (event.url) {
       urlDisplay.textContent = event.url;
     }
   });
   
-  // 监听页内导航事件以更新URL显示
+  // Listen for in-page navigation events to update the URL display
   webview.addEventListener('did-navigate-in-page', (event) => {
     if (event.url) {
       urlDisplay.textContent = event.url;
     }
   });
   
-  // 页面加载开始时注入早期链接处理脚本
+  // Inject early link processing script at the start of page loading
   webview.addEventListener('did-start-loading', async () => {
-    // 注入早期链接处理脚本
+    // Inject early link processing script
     webview.executeJavaScript(`
       (function() {
-        // 仅在未设置时设置
+        // Set only when not set
         if (!window._yanhektEarlyLinkHandlerInstalled) {
           window._yanhektEarlyLinkHandlerInstalled = true;
           
-          // 立即覆盖window.open
+          // Immediately overwrite window.open
           const originalWindowOpen = window.open;
           window.open = function(url, name, features) {
             if (url) {
@@ -175,7 +173,7 @@ function setupWebviewEvents() {
             return null;
           };
           
-          // 添加早期点击处理程序
+          // Add early click handler
           document.addEventListener('click', function(event) {
             const link = event.target.closest('a');
             if (!link) return;
@@ -196,26 +194,26 @@ function setupWebviewEvents() {
     `).catch(err => console.error('Error injecting early link handler:', err));
   });
   
-  // DOM准备好后注入链接处理脚本
+  // Inject link processing script after DOM is ready
   webview.addEventListener('dom-ready', () => {
     console.log('WebView ready');
     
-    // 注入链接处理脚本
+    // Inject link processing script
     webview.executeJavaScript(`
       (function() {
-        // 仅设置一次链接处理程序
+        // Set the link handler only once
         if (!window._yanhektLinkHandlerInstalled) {
           window._yanhektLinkHandlerInstalled = true;
           
-          // 覆盖window.open
+          // overwrite window.open
           const originalWindowOpen = window.open;
           window.open = function(url, name, features) {
             if (url) {
               console.log('Intercepted window.open:', url);
-              // 使用location.href在同一窗口中导航
+              // Use location.href to navigate in the same window
               setTimeout(() => location.href = url, 0);
               
-              // 返回模拟窗口对象
+              // Return simulated window object
               return {
                 closed: false,
                 close: function() {},
@@ -226,12 +224,12 @@ function setupWebviewEvents() {
             return null;
           };
           
-          // 处理target="_blank"链接
+          // Handling target="_blank" links
           document.addEventListener('click', function(event) {
             const link = event.target.closest('a');
             if (!link) return;
             
-            // 处理_blank链接或cmd/ctrl+点击
+            // Handle _blank links or cmd/ctrl+click
             if (link.target === '_blank' || event.ctrlKey || event.metaKey) {
               event.preventDefault();
               event.stopPropagation();
@@ -261,15 +259,15 @@ function setupEventListeners() {
   extractCourseIdBtn.addEventListener('click', extractCourseId);
   
   // Download section
-  selectAllBtn.addEventListener('click', toggleSelectAllVideos); // 添加全选按钮的事件监听
+  selectAllBtn.addEventListener('click', toggleSelectAllVideos);
   startDownloadBtn.addEventListener('click', startDownload);
   openDownloadFolderBtn.addEventListener('click', openDownloadFolder);
   
-  // 下载列表弹出层的展开和关闭事件
+  // Expand and close events of the download list popup layer
   expandDownloadsBtn.addEventListener('click', toggleDownloadsPopup);
   closeDownloadsBtn.addEventListener('click', toggleDownloadsPopup);
   
-  // 添加下载路径选择按钮事件监听
+  // Add download path selection button event listener
   selectDownloadPathBtn.addEventListener('click', selectDownloadPath);
   
   // Set up IPC event listeners for download progress and status updates
@@ -425,11 +423,11 @@ async function extractCourseId() {
 function displayCourseInfo(courseData) {
   currentCourse = courseData;
   
-  // 设置课程名称，如果过长则使用省略号
+  // Set the course name, use an ellipsis if it is too long
   courseName.textContent = courseData.name;
-  courseName.title = courseData.name; // 添加完整名称作为提示
+  courseName.title = courseData.name; // Add full name as a prompt
   
-  // 检查课程名是否溢出并添加省略号
+  // Check if the course name overflows and add an ellipsis
   setTimeout(() => {
     if (courseName.scrollWidth > courseName.clientWidth) {
       const nameLength = courseData.name.length;
@@ -522,7 +520,7 @@ async function startDownload() {
   // For each selected video, start a download
   for (const index of selectedVideos) {
     const video = currentCourse.videoList[index];
-    // 使用新的命名格式：课程名_Week_X_Day
+    // Use the new naming format: CourseName_Week_X_Day
     const formattedTitle = formatVideoName(video.title);
     const videoName = `${currentCourse.name}_${formattedTitle}`;
     
@@ -730,17 +728,17 @@ function toggleDownloadsPopup() {
   // Toggle the 'show' class on the downloads popup
   downloadsPopup.classList.toggle('show');
   
-  // 更新按钮图标方向（实际上是通过CSS变换实现）
+  // Update the direction of the button icon (actually achieved through CSS transformation)
   if (downloadsPopup.classList.contains('show')) {
-    // 如果弹出窗口现在显示，更改按钮方向
+    // If the pop-up window is currently displayed, change the button direction
     expandDownloadsBtn.classList.add('rotated');
   } else {
-    // 如果弹出窗口现在隐藏，恢复按钮方向
+    // If the pop-up window is currently hidden, restore the button direction
     expandDownloadsBtn.classList.remove('rotated');
   }
 }
 
-// 选择下载路径
+// Choose download path
 async function selectDownloadPath() {
   try {
     const result = await ipcRenderer.invoke('select-download-path');
@@ -749,14 +747,14 @@ async function selectDownloadPath() {
       currentDownloadPath = result.path;
       downloadPathInput.value = currentDownloadPath;
       
-      // 显示成功消息
+      // Show success message
       const notification = document.createElement('div');
       notification.textContent = '下载路径已更改';
       notification.style.color = 'green';
       notification.style.fontSize = '0.9em';
       notification.style.marginTop = '5px';
       
-      // 移除之前的通知
+      // Remove previous notifications
       const oldNotification = downloadPathInput.parentNode.querySelector('.path-notification');
       if (oldNotification) {
         oldNotification.remove();
@@ -765,7 +763,7 @@ async function selectDownloadPath() {
       notification.className = 'path-notification';
       downloadPathInput.parentNode.appendChild(notification);
       
-      // 3秒后移除通知
+      // Remove notification after 3 seconds
       setTimeout(() => {
         notification.remove();
       }, 3000);

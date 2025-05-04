@@ -6,7 +6,7 @@ const axios = require('axios');
 // Same magic string as in Python code - from YanHeKT website's main.js
 const magic = "1138b69dfef641d9d7ba49137d2d4875";
 
-// 添加内存中的认证令牌变量
+// Add authentication token variable in memory
 let inMemoryAuthToken = "";
 
 const headers = {
@@ -78,7 +78,7 @@ function addSignatureForUrl(url, token, timestamp, signature) {
 
 // File operations for auth
 function readAuth() {
-  // 不再从文件读取，而是从内存变量读取
+  // No longer reading from a file, but reading from a memory variable instead
   if (inMemoryAuthToken) {
     headers["Authorization"] = "Bearer " + inMemoryAuthToken;
     return inMemoryAuthToken;
@@ -88,7 +88,7 @@ function readAuth() {
 
 function writeAuth(auth) {
   try {
-    // 只在内存中保存认证信息，不再写入文件
+    // Only save authentication information in memory, no longer write it to a file.
     headers["Authorization"] = "Bearer " + auth;
     inMemoryAuthToken = auth;
     console.log("认证信息已保存在内存中");
@@ -101,7 +101,7 @@ function writeAuth(auth) {
 
 function removeAuth() {
   try {
-    // 清除内存中的认证信息
+    // Clear authentication information from memory
     headers["Authorization"] = "";
     inMemoryAuthToken = "";
     console.log("认证信息已从内存中移除");

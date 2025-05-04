@@ -2,10 +2,36 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const { spawn } = require('child_process');
-const ffmpegPath = require('ffmpeg-static');
+const ffmpegStatic = require('ffmpeg-static');
 const utils = require('./utils');
 const electron = require('electron');
 const app = electron.app || (electron.remote ? electron.remote.app : null);
+
+// Determine correct ffmpeg path based on environment
+let ffmpegPath;
+if (app && app.isPackaged) {
+  // In production: use binaries from resources folder based on architecture
+  if (process.platform === 'win32') {
+    // For Windows - use the bundled binary from resources/bin
+    ffmpegPath = path.join(process.resourcesPath, 'bin', 'ffmpeg.exe');
+  } else {
+    // For macOS - use the unpacked node_modules binaries
+    ffmpegPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'ffmpeg-static', 'ffmpeg');
+  }
+  
+  // Verify the ffmpeg executable exists
+  if (!fs.existsSync(ffmpegPath)) {
+    console.error(`FFmpeg executable not found at: ${ffmpegPath}`);
+    // Fallback to the included static version
+    ffmpegPath = ffmpegStatic;
+  } else {
+    console.log(`Using FFmpeg from resources: ${ffmpegPath}`);
+  }
+} else {
+  // In development: use the npm package
+  ffmpegPath = ffmpegStatic;
+  console.log(`Using development FFmpeg: ${ffmpegPath}`);
+}
 
 class M3u8Downloader {
   /**

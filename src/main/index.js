@@ -6,45 +6,45 @@ const utils = require('../shared/utils');
 
 app.setName('Yanhekt Downloader');  
 
-// 保存用户设置的默认路径
+// Default path for saving user settings
 let userDownloadPath = '';
 
-// 获取默认下载路径
+// Get default download path
 function getDefaultDownloadPath() {
   if (userDownloadPath) {
     return userDownloadPath;
   }
   
-  // 用户下载目录
+  // User Download Directory
   const downloadDir = app.getPath('downloads');
   const yanheDir = path.join(downloadDir, 'Yanhe');
   
-  // 确保目录存在
+  // Ensure the directory exists
   if (!fs.existsSync(yanheDir)) {
     try {
       fs.mkdirSync(yanheDir, { recursive: true });
     } catch (error) {
       console.error('创建默认下载目录失败:', error);
-      return downloadDir; // 如果创建失败，返回下载目录
+      return downloadDir; // If creation fails, return to the download directory
     }
   }
   
   return yanheDir;
 }
 
-// 保存用户设置的下载路径
+// Save the download path for user settings
 function saveUserDownloadPath(newPath) {
   if (!newPath) return false;
   
   try {
-    // 确保路径存在
+    // Ensure the path exists
     if (!fs.existsSync(newPath)) {
       fs.mkdirSync(newPath, { recursive: true });
     }
     
     userDownloadPath = newPath;
     
-    // 可以将设置保存到配置文件
+    // You can save the settings to a configuration file.
     const configPath = path.join(app.getPath('userData'), 'config.json');
     const config = { downloadPath: newPath };
     fs.writeFileSync(configPath, JSON.stringify(config));
@@ -56,7 +56,7 @@ function saveUserDownloadPath(newPath) {
   }
 }
 
-// 加载用户设置
+// Loading user settings
 function loadUserSettings() {
   try {
     const configPath = path.join(app.getPath('userData'), 'config.json');
@@ -107,10 +107,10 @@ function createWindow() {
     mainWindow = null;
   });
 
-  // 加载用户设置
+  // Loading user settings
   loadUserSettings();
   
-  // 确保下载目录存在
+  // Ensure the download directory exists
   const outputDir = getDefaultDownloadPath();
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
@@ -210,17 +210,15 @@ ipcMain.handle('get-course-info', async (event, courseId) => {
 ipcMain.handle('start-download', async (event, options) => {
   const { videoUrl, workDir, name, audioUrl, videoId, downloadAudio } = options;
   
-  // 使用用户设置的下载路径或默认路径
+  // Use the user-set download path or the default path
   const basePath = getDefaultDownloadPath();
   
-  // 修复: 不再重复拼接路径
-  // 如果workDir已经是完整路径，就直接使用；否则拼接基础路径和工作目录
+  // If workDir is already a full path, use it directly; otherwise, concatenate the base path and the working directory.
   let outputPath;
   if (path.isAbsolute(workDir)) {
     outputPath = workDir;
   } else {
-    // 避免路径重复，只拼接简单的子目录名称
-    // 例如: workDir为"质性研究方法-screen"而不是完整路径
+    // Avoid path duplication, only concatenate simple subdirectory names
     outputPath = path.join(basePath, workDir);
   }
   
@@ -238,7 +236,7 @@ ipcMain.handle('start-download', async (event, options) => {
     // Create a new downloader for this video
     const downloader = new M3u8Downloader(
       videoUrl, 
-      workDir, // 原始workDir参数
+      workDir, // Original workDir parameter
       name, 
       32, 
       99, 
@@ -252,7 +250,7 @@ ipcMain.handle('start-download', async (event, options) => {
           });
         }
       },
-      basePath // 传递基础路径
+      basePath // Transfer Base Path
     );
     
     // Store the downloader reference
@@ -336,7 +334,7 @@ ipcMain.handle('select-output-folder', async () => {
   return null;
 });
 
-// 添加新的IPC处理程序
+// Add new IPC handler
 ipcMain.handle('get-download-path', async () => {
   return getDefaultDownloadPath();
 });
