@@ -561,12 +561,12 @@ button:disabled {
 }
 
 .notification {
-  padding: 8px 12px;
+  padding: 0;
   border-radius: 4px;
   background-color: #e3f2fd;
   color: var(--primary-color);
-  margin-top: 10px;
-  font-size: 0.9em;
+  margin: 0;
+  font-size: 10px;
   display: flex;
   align-items: center;
   animation: fadeIn 0.3s ease;
@@ -579,6 +579,11 @@ button:disabled {
 }
 
 #auth-status {
+  font-size: 12px;
+  margin: 0;
+}
+
+#download-path-status {
   font-size: 12px;
   margin: 0;
 }
@@ -661,16 +666,4 @@ button:disabled {
 
 .section {
   animation: fadeIn 0.5s ease-in-out;
-}
-
-.notification {
-  padding: 8px 12px;
-  border-radius: 4px;
-  background-color: #e3f2fd;
-  color: var(--primary-color);
-  margin-top: 10px;
-  font-size: 0.9em;
-  display: flex;
-  align-items: center;
-  animation: fadeIn 0.3s ease;
 }

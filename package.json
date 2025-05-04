@@ -8,7 +8,7 @@
     "build": "electron-builder"
   },
   "keywords": [],
-  "author": "",
+  "author": "bit-admin",
   "license": "MIT",
   "devDependencies": {
     "electron": "^35.1.4",

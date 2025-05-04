@@ -24,6 +24,7 @@ const closeDownloadsBtn = document.getElementById('close-downloads-btn');
 const downloadsPopup = document.getElementById('downloads-popup');
 const urlDisplay = document.getElementById('url-display');
 const downloadPathInput = document.getElementById('download-path');
+const downloadPathStatus = document.getElementById('download-path-status');
 const selectDownloadPathBtn = document.getElementById('select-download-path-btn');
 
 // Global state
@@ -748,24 +749,12 @@ async function selectDownloadPath() {
       downloadPathInput.value = currentDownloadPath;
       
       // Show success message
-      const notification = document.createElement('div');
-      notification.textContent = '下载路径已更改';
-      notification.style.color = 'green';
-      notification.style.fontSize = '0.9em';
-      notification.style.marginTop = '5px';
-      
-      // Remove previous notifications
-      const oldNotification = downloadPathInput.parentNode.querySelector('.path-notification');
-      if (oldNotification) {
-        oldNotification.remove();
-      }
-      
-      notification.className = 'path-notification';
-      downloadPathInput.parentNode.appendChild(notification);
+      downloadPathStatus.textContent = '下载路径已更改';
+      downloadPathStatus.style.color = 'green';
       
       // Remove notification after 3 seconds
       setTimeout(() => {
-        notification.remove();
+        downloadPathStatus.textContent = '';
       }, 3000);
     }
   } catch (error) {
