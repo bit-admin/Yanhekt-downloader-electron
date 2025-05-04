@@ -56,16 +56,16 @@ class M3u8Downloader {
     this._numRetries = numRetries;
     this._progressCallback = progressCallback || function() {};
     
-    // 使用提供的基础路径或默认路径
+    // Use the provided base path or default path
     const defaultPath = app ? app.getPath('userData') : process.cwd();
     this._basePath = basePath || defaultPath;
     
-    // 修复：检查workDir是否是绝对路径，避免重复拼接
+    // Fix: Check if workDir is an absolute path to avoid repeated concatenation
     if (path.isAbsolute(this._workDir)) {
-      // 如果workDir已经是绝对路径，则直接使用
+      // If workDir is already an absolute path, use it directly
       this._filePath = path.join(this._workDir, this._name);
     } else {
-      // 如果workDir是相对路径，则拼接基础路径和工作目录
+      // If workDir is a relative path, concatenate the base path and the working directory.
       this._filePath = path.join(this._basePath, this._workDir, this._name);
     }
     
@@ -273,7 +273,7 @@ class M3u8Downloader {
         
         this._tsUrlList.push(tsUrl);
         
-        // 使用简单的相对路径，这样在合并时更方便
+        // Use simple relative paths to make merging easier.
         newM3u8Str += `${tsCount}.ts\n`;
         
         tsCount++;
@@ -285,13 +285,13 @@ class M3u8Downloader {
     console.log(`生成m3u8文件: ${this._filePath}.m3u8`);
     console.log(`总共包含 ${tsCount} 个TS文件片段`);
     
-    // 保存m3u8文件
+    // Save m3u8 file
     fs.writeFileSync(`${this._filePath}.m3u8`, newM3u8Str);
     
-    // 同时生成ffmpeg concat格式的文件列表
+    // Simultaneously generate a file list in ffmpeg concat format
     let concatContent = '';
     for (let i = 0; i < tsCount; i++) {
-      // 使用单引号包裹文件路径，处理空格和特殊字符
+      // Use single quotes to enclose file paths, handling spaces and special characters
       concatContent += `file '${path.join(this._filePath, `${i}.ts`).replace(/'/g, "'\\''").replace(/\\/g, "/")}'\n`;
     }
     fs.writeFileSync(`${this._filePath}.concat`, concatContent);
