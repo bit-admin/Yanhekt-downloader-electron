@@ -18,6 +18,8 @@
   --status-completed-text: #0d47a1;
   --status-error-bg: #ffcdd2;
   --status-error-text: #b71c1c;
+  --badge-bg: #ff4444;
+  --badge-text: #ffffff;
   --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
 }
@@ -666,4 +668,26 @@ button:disabled {
 
 .section {
   animation: fadeIn 0.5s ease-in-out;
+}
+
+.download-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--badge-bg);
+  color: var(--badge-text);
+  font-size: 11px;
+  font-weight: bold;
+  margin-left: 8px;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.download-badge.visible {
+  opacity: 1;
+  transform: scale(1);
 }

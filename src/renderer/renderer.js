@@ -26,12 +26,34 @@ const urlDisplay = document.getElementById('url-display');
 const downloadPathInput = document.getElementById('download-path');
 const downloadPathStatus = document.getElementById('download-path-status');
 const selectDownloadPathBtn = document.getElementById('select-download-path-btn');
+const downloadCountBadge = document.getElementById('download-count-badge');
 
 // Global state
 let currentCourse = null;
 let selectedVideos = new Set();
 let downloads = new Map();
 let currentDownloadPath = '';
+let activeDownloadCount = 0; // Track active download count
+
+/**
+ * Update the download count badge
+ */
+function updateDownloadBadge() {
+  // Count active downloads (not completed or error)
+  activeDownloadCount = Array.from(downloads.values()).filter(
+    download => download.status === 'downloading' || download.status === 'converting'
+  ).length;
+  
+  // Update badge text
+  downloadCountBadge.textContent = activeDownloadCount;
+  
+  // Toggle badge visibility
+  if (activeDownloadCount > 0) {
+    downloadCountBadge.classList.add('visible');
+  } else {
+    downloadCountBadge.classList.remove('visible');
+  }
+}
 
 /**
  * Format video file name
@@ -110,6 +132,9 @@ async function init() {
   
   // Set up webview event handling
   setupWebviewEvents();
+  
+  // Initialize download badge (hidden by default)
+  updateDownloadBadge();
 }
 
 // Load and display download path
@@ -616,6 +641,9 @@ function createDownloadItem(id, name) {
     progress: 0,
     element: downloadItem
   });
+  
+  // Update badge after adding a new download
+  updateDownloadBadge();
 }
 
 // Update download progress in UI
@@ -651,6 +679,9 @@ function updateDownloadProgress(data) {
     if (cancelBtn) {
       cancelBtn.remove();
     }
+    
+    // Update badge count since a download has completed
+    updateDownloadBadge();
   }
 }
 
@@ -676,6 +707,9 @@ function updateDownloadStatus(data) {
     if (cancelBtn) {
       cancelBtn.remove();
     }
+    
+    // Update badge count since a download has completed
+    updateDownloadBadge();
   }
 }
 
@@ -699,6 +733,9 @@ function handleDownloadError(data) {
   errorElement.style.marginTop = '5px';
   
   download.element.appendChild(errorElement);
+  
+  // Update badge count since a download has errored
+  updateDownloadBadge();
 }
 
 // Cancel an active download
@@ -718,6 +755,9 @@ async function cancelDownload(id) {
       if (cancelBtn) {
         cancelBtn.remove();
       }
+      
+      // Update badge count since a download was canceled
+      updateDownloadBadge();
     }
   } else {
     alert('取消下载失败: ' + result.error);
