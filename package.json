@@ -5,27 +5,73 @@
   "main": "src/main/index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
-    "pack": "electron-builder --dir"
+    "build": "electron-builder"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^35.1.4",
+    "electron-builder": "^26.0.12",
+    "electron-debug": "^4.1.0"
+  },
   "dependencies": {
     "axios": "^1.6.0",
-    "electron": "^29.0.0",
-    "electron-builder": "^24.9.0",
     "ffmpeg-static": "^5.2.0",
     "node-fetch": "^3.3.2"
   },
   "build": {
-    "appId": "com.yanhekt.downloader",
+    "appId": "com.yanhekt.autoslides.app",
     "productName": "Yanhekt Downloader",
-    "mac": {
-      "category": "public.app-category.utilities"
-    },
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "asar": true,
+    "compression": "maximum",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "target": [
+        "dmg"
+      ],
+      "artifactName": "${productName}-${version}-macOS-${arch}.${ext}",
+      "asarUnpack": [
+        "node_modules/ffmpeg-static/ffmpeg"
+      ]
+    },
+    "dmg": {
+      "background": "build/background.png"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico",
+      "appId": "Yanhekt Downloader",
+      "files": [
+        "!node_modules/ffmpeg-static"
+      ],
+      "extraResources": [
+        {
+          "from": "build/binaries/win-${arch}",
+          "to": "bin",
+          "filter": ["**/*"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Yanhekt Downloader",
+      "perMachine": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "deleteAppDataOnUninstall": true,
+      "artifactName": "${productName}-Setup-${version}-Windows-${arch}.${ext}"
     }
   }
 }

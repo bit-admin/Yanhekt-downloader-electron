@@ -33,11 +33,8 @@ function updateHeaders() {
 // Authentication-related functions
 function authPrompt() {
   return [
-    "请先在浏览器登录延河课堂",
-    "并在延河课堂的地址栏输入 javascript:alert(JSON.parse(localStorage.auth).token)",
-    '注意粘贴时浏览器会自动去掉"javascript:"，需要手动补上',
-    "或者按F12打开控制台粘贴这段代码",
-    "然后将弹出的内容粘贴到这里："
+    "请先登录延河课堂，获取认证信息",
+    "然后将认证信息粘贴到这里："
   ].join("\n");
 }
 
@@ -64,14 +61,14 @@ async function getToken() {
       const retryResponse = await axios.get("https://cbiz.yanhekt.cn/v1/auth/video/token?id=0", { headers });
       const retryData = retryResponse.data.data;
       if (!retryData) {
-        throw new Error("获取Token失败");
+        throw new Error("获取 Token 失败");
       }
       return retryData.token;
     }
     return data.token;
   } catch (error) {
     console.error("Error getting token:", error);
-    throw new Error("获取Token失败");
+    throw new Error("获取 Token 失败");
   }
 }
 
@@ -147,14 +144,14 @@ async function getCourseInfo(courseID) {
     );
 
     if (courseResponse.data.code !== 0 && courseResponse.data.code !== "0") {
-      throw new Error(`课程ID: ${courseID}, ${courseResponse.data.message}。请检查您的课程ID，注意它应该是5位数字，从课程信息界面的链接yanhekt.cn/course/***获取，而不是课程播放界面的链接yanhekt.cn/session/***`);
+      throw new Error(`课程ID: ${courseID}, ${courseResponse.data.message}。课程ID有误，应类似yanhekt.cn/course/***`);
     }
 
     const videoList = sessionResponse.data.data;
     const name = courseResponse.data.data.name_zh.trim();
     
     if (!videoList || videoList.length === 0) {
-      throw new Error(`该课程(${name})没有视频信息，请检查课程ID是否正确`);
+      throw new Error(`课程(${name})信息返回错误，请检查是否已取得认证信息，课程ID是否正确`);
     }
 
     let professor = "未知教师";

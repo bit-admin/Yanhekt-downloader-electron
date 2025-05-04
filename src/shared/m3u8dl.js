@@ -427,6 +427,7 @@ class M3u8Downloader {
         '-c', 'copy',
         '-bsf:a', 'aac_adtstoasc',
         '-movflags', '+faststart',
+        '-progress', 'pipe:1', // 添加进度报告到stdout
         mp4FilePath
       ];
       
@@ -441,19 +442,94 @@ class M3u8Downloader {
       let stdoutData = '';
       let stderrData = '';
       
+      // 用于解析FFmpeg进度
+      let duration = 0;
+      let currentTime = 0;
+      let progressPercent = 0;
+      
       ffmpegProcess.stdout.on('data', (data) => {
-        stdoutData += data.toString();
-        console.log(`ffmpeg stdout: ${data}`);
+        const text = data.toString();
+        stdoutData += text;
+        
+        // 解析FFmpeg进度输出
+        const lines = text.trim().split('\n');
+        for (const line of lines) {
+          if (line.startsWith('out_time_ms=')) {
+            currentTime = parseInt(line.split('=')[1]) / 1000000; // 转换为秒
+          } else if (line.startsWith('out_time=')) {
+            // 格式为 HH:MM:SS.MS
+            const timeStr = line.split('=')[1];
+            const timeParts = timeStr.split(':');
+            if (timeParts.length === 3) {
+              const hours = parseInt(timeParts[0]);
+              const minutes = parseInt(timeParts[1]);
+              const seconds = parseFloat(timeParts[2]);
+              currentTime = hours * 3600 + minutes * 60 + seconds;
+            }
+          } else if (line.startsWith('duration=')) {
+            const durationStr = line.split('=')[1];
+            const durationParts = durationStr.split(':');
+            if (durationParts.length === 3) {
+              const hours = parseInt(durationParts[0]);
+              const minutes = parseInt(durationParts[1]);
+              const seconds = parseFloat(durationParts[2]);
+              duration = hours * 3600 + minutes * 60 + seconds;
+            }
+          } else if (line.startsWith('progress=')) {
+            const progress = line.split('=')[1].trim();
+            if (progress === 'end') {
+              // 转换完成
+              progressPercent = 100;
+              this._progressCallback(100, 100, 1);
+            }
+          }
+        }
+        
+        // 如果有足够的信息计算进度
+        if (duration > 0 && currentTime > 0) {
+          progressPercent = Math.min(Math.floor((currentTime / duration) * 100), 99);
+          this._progressCallback(progressPercent, 100, 1);
+        }
+        
+        console.log(`ffmpeg stdout: ${text}`);
       });
       
       ffmpegProcess.stderr.on('data', (data) => {
-        stderrData += data.toString();
-        console.log(`ffmpeg stderr: ${data}`);
+        const text = data.toString();
+        stderrData += text;
+        console.log(`ffmpeg stderr: ${text}`);
+        
+        // 从stderr解析总时长（如果stdout中没有）
+        if (duration === 0) {
+          const durationMatch = text.match(/Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})/);
+          if (durationMatch) {
+            const hours = parseInt(durationMatch[1]);
+            const minutes = parseInt(durationMatch[2]);
+            const seconds = parseFloat(durationMatch[3]);
+            duration = hours * 3600 + minutes * 60 + seconds;
+          }
+        }
+        
+        // 从stderr解析当前进度（如果stdout中没有）
+        const timeMatch = text.match(/time=(\d{2}):(\d{2}):(\d{2}\.\d{2})/);
+        if (timeMatch) {
+          const hours = parseInt(timeMatch[1]);
+          const minutes = parseInt(timeMatch[2]);
+          const seconds = parseFloat(timeMatch[3]);
+          currentTime = hours * 3600 + minutes * 60 + seconds;
+          
+          if (duration > 0) {
+            progressPercent = Math.min(Math.floor((currentTime / duration) * 100), 99);
+            this._progressCallback(progressPercent, 100, 1);
+          }
+        }
       });
       
       ffmpegProcess.on('close', (code) => {
         if (code === 0) {
           console.log("MP4转换成功完成");
+          // 确保最终进度为100%
+          this._progressCallback(100, 100, 1);
           resolve();
         } else {
           console.error(`FFmpeg退出代码: ${code}`);
@@ -463,6 +539,8 @@ class M3u8Downloader {
           // 检查输出文件是否存在，尽管有错误
           if (fs.existsSync(mp4FilePath)) {
             console.log("尽管ffmpeg返回错误，但MP4文件已生成");
+            // 确保最终进度为100%
+            this._progressCallback(100, 100, 1);
             resolve();
           } else {
             // 尝试备用方案
@@ -491,6 +569,7 @@ class M3u8Downloader {
       '-allowed_extensions', 'ALL',
       '-i', m3u8FilePath,
       '-c', 'copy',
+      '-progress', 'pipe:1', // 添加进度报告到stdout
       mp4FilePath
     ];
     
@@ -500,19 +579,102 @@ class M3u8Downloader {
       windowsVerbatimArguments: process.platform === 'win32'
     });
     
+    let fbStdoutData = '';
     let fbStderrData = '';
     
+    // 用于解析FFmpeg进度
+    let duration = 0;
+    let currentTime = 0;
+    let progressPercent = 0;
+    
+    ffmpegProcess.stdout.on('data', (data) => {
+      const text = data.toString();
+      fbStdoutData += text;
+      
+      // 解析FFmpeg进度输出
+      const lines = text.trim().split('\n');
+      for (const line of lines) {
+        if (line.startsWith('out_time_ms=')) {
+          currentTime = parseInt(line.split('=')[1]) / 1000000; // 转换为秒
+        } else if (line.startsWith('out_time=')) {
+          // 格式为 HH:MM:SS.MS
+          const timeStr = line.split('=')[1];
+          const timeParts = timeStr.split(':');
+          if (timeParts.length === 3) {
+            const hours = parseInt(timeParts[0]);
+            const minutes = parseInt(timeParts[1]);
+            const seconds = parseFloat(timeParts[2]);
+            currentTime = hours * 3600 + minutes * 60 + seconds;
+          }
+        } else if (line.startsWith('duration=')) {
+          const durationStr = line.split('=')[1];
+          const durationParts = durationStr.split(':');
+          if (durationParts.length === 3) {
+            const hours = parseInt(durationParts[0]);
+            const minutes = parseInt(durationParts[1]);
+            const seconds = parseFloat(durationParts[2]);
+            duration = hours * 3600 + minutes * 60 + seconds;
+          }
+        } else if (line.startsWith('progress=')) {
+          const progress = line.split('=')[1].trim();
+          if (progress === 'end') {
+            // 转换完成
+            progressPercent = 100;
+            this._progressCallback(100, 100, 1);
+          }
+        }
+      }
+      
+      // 如果有足够的信息计算进度
+      if (duration > 0 && currentTime > 0) {
+        progressPercent = Math.min(Math.floor((currentTime / duration) * 100), 99);
+        this._progressCallback(progressPercent, 100, 1);
+      }
+      
+      console.log(`备用ffmpeg stdout: ${text}`);
+    });
+    
     ffmpegProcess.stderr.on('data', (data) => {
-      fbStderrData += data.toString();
-      console.log(`备用ffmpeg stderr: ${data}`);
+      const text = data.toString();
+      fbStderrData += text;
+      console.log(`备用ffmpeg stderr: ${text}`);
+      
+      // 从stderr解析总时长（如果stdout中没有）
+      if (duration === 0) {
+        const durationMatch = text.match(/Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})/);
+        if (durationMatch) {
+          const hours = parseInt(durationMatch[1]);
+          const minutes = parseInt(durationMatch[2]);
+          const seconds = parseFloat(durationMatch[3]);
+          duration = hours * 3600 + minutes * 60 + seconds;
+        }
+      }
+      
+      // 从stderr解析当前进度（如果stdout中没有）
+      const timeMatch = text.match(/time=(\d{2}):(\d{2}):(\d{2}\.\d{2})/);
+      if (timeMatch) {
+        const hours = parseInt(timeMatch[1]);
+        const minutes = parseInt(timeMatch[2]);
+        const seconds = parseFloat(timeMatch[3]);
+        currentTime = hours * 3600 + minutes * 60 + seconds;
+        
+        if (duration > 0) {
+          progressPercent = Math.min(Math.floor((currentTime / duration) * 100), 99);
+          this._progressCallback(progressPercent, 100, 1);
+        }
+      }
     });
     
     ffmpegProcess.on('close', (code) => {
       if (code === 0) {
         console.log("备用MP4转换成功完成");
+        // 确保最终进度为100%
+        this._progressCallback(100, 100, 1);
         resolve();
       } else if (fs.existsSync(mp4FilePath)) {
         console.log("尽管备用ffmpeg返回错误，但MP4文件已生成");
+        // 确保最终进度为100%
+        this._progressCallback(100, 100, 1);
         resolve();
       } else {
         reject(new Error(`FFmpeg转换失败。原始错误: ${errorMessage}，备用方案错误: ${fbStderrData}`));

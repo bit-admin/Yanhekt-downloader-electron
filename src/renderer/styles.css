@@ -42,23 +42,12 @@ body {
 
 /* 左侧面板 */
 .left-panel {
-  width: 360px;
+  width: 380px;
   flex-shrink: 0;
   padding: 20px;
   background-color: var(--card-bg);
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
-}
-
-/* 应用标题 */
-h1 {
-  color: var(--primary-color);
-  margin-bottom: 20px;
-  font-size: 1.8em;
-  border-bottom: 2px solid var(--border-color);
-  padding-bottom: 10px;
-  font-weight: 600;
-  text-align: center;
 }
 
 /* 右侧面板 */
@@ -111,30 +100,6 @@ webview {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* 标题样式 */
-h2 {
-  margin-top: 0;
-  color: var(--primary-color);
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 12px;
-  font-size: 1.5em;
-  font-weight: 500;
-}
-
-h3 {
-  color: var(--text-color);
-  margin: 15px 0 10px;
-}
-
-.app-title {
-  font-size: 1.3em;
-  color: var(--primary-color);
-  font-weight: 700;
-  margin-bottom: 10px;
-  text-align: center;
-  letter-spacing: 1px;
-  border-bottom: none;
-}
 .section.compact-section {
   margin-bottom: 14px;
   padding: 14px 14px 10px 14px;
@@ -147,6 +112,7 @@ h3 {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
+  justify-content: space-between;
 }
 .section-title {
   font-size: 1.08em;
@@ -182,6 +148,8 @@ h3 {
   min-width: 0;
   margin-right: 0;
   margin-bottom: 0;
+  height: 30px;
+  font-size: 14px;
 }
 .download-options.compact-options {
   margin-top: 6px;
@@ -195,8 +163,8 @@ h3 {
   margin-bottom: 8px;
 }
 .radio-row label {
-  font-size: 0.98em;
-  margin-bottom: 0;
+  font-size: 14px;
+  padding-top: 10px;
   font-weight: 400;
   display: flex;
   align-items: center;
@@ -207,10 +175,11 @@ h3 {
 }
 #start-download-btn {
   width: 100%;
+  height: 30px;
   margin-top: 0;
   margin-bottom: 0;
   padding: 8px 0;
-  font-size: 1em;
+  font-size: 14px;
 }
 .download-path-section.compact-input {
   margin-bottom: 8px;
@@ -235,9 +204,10 @@ h3 {
 }
 #open-download-folder {
   width: 100%;
+  height: 30px;
   margin-top: 8px;
   padding: 8px 0;
-  font-size: 1em;
+  font-size: 14px;
 }
 @media (max-width: 600px) {
   .left-panel {
@@ -331,13 +301,13 @@ button:disabled {
   overflow-y: auto;
   border: 1px solid #ddd;
   border-radius: 6px;
-  margin-top: 12px;
+  margin-top: 0;  /* 减少顶部间距，使其更紧凑 */
   background-color: #fafafa;
   scrollbar-width: thin;
 }
 
 .video-list::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;  /* 更窄的滚动条 */
 }
 
 .video-list::-webkit-scrollbar-thumb {
@@ -346,12 +316,14 @@ button:disabled {
 }
 
 .video-item {
-  padding: 12px 14px;
+  padding: 6px 10px;  /* 减小内边距使行高更小 */
   border-bottom: 1px solid #eee;
   cursor: pointer;
   transition: background-color 0.2s;
   display: flex;
   align-items: center;
+  font-size: 14px;  /* 设置字体大小为14px */
+  line-height: 1.3;  /* 设置更小的行高 */
 }
 
 .video-item:last-child {
@@ -370,13 +342,14 @@ button:disabled {
 .video-item.selected::before {
   content: "✓";
   position: absolute;
-  left: 6px;
+  left: 4px;  /* 调整选中标记位置 */
   color: var(--primary-color);
   font-weight: bold;
+  font-size: 12px;  /* 稍微调小选中标记的字体大小 */
 }
 
 .video-item.selected {
-  padding-left: 24px;
+  padding-left: 18px;  /* 调整选中项的左内边距 */
 }
 
 /* 下载选项 */
@@ -563,4 +536,31 @@ button:disabled {
   content: "ℹ";
   margin-right: 8px;
   font-weight: bold;
+}
+
+#auth-status {
+  font-size: 12px;
+  margin: 0;
+}
+
+.course-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+
+/* 课程名称样式，防止换行并使用省略号 */
+#course-name {
+  margin: 0;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;  /* 控制宽度，留出空间给教师名称 */
+}
+
+/* 使用中文省略号 */
+#course-name.overflow {
+  text-overflow: ellipsis;
 }

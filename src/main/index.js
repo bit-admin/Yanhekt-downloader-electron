@@ -4,6 +4,8 @@ const fs = require('fs');
 const { M3u8Downloader } = require('../shared/m3u8dl');
 const utils = require('../shared/utils');
 
+app.setName('Yanhekt Downloader');  
+
 // 保存用户设置的默认路径
 let userDownloadPath = '';
 
@@ -302,4 +304,14 @@ ipcMain.handle('select-download-path', async () => {
   }
   
   return { path: getDefaultDownloadPath(), success: false };
+});
+
+ipcMain.handle('get-audio-url', async (event, videoId) => {
+  try {
+    const audioUrl = await utils.getAudioUrl(videoId);
+    return audioUrl;
+  } catch (error) {
+    console.error('Error in get-audio-url handler:', error);
+    return '';
+  }
 });

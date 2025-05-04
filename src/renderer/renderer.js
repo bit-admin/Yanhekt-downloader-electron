@@ -30,6 +30,49 @@ let selectedVideos = new Set();
 let downloads = new Map();
 let currentDownloadPath = ''; // 存储当前下载路径
 
+/**
+ * 格式化视频文件名
+ * 从 "第X周 星期X 第X大节" 转换为 "Week_X_Day"
+ * 例如：从 "第6周 星期四 第4大节" 转换为 "Week_6_Thu"
+ * @param {string} title - 原始视频标题
+ * @returns {string} 格式化后的文件名部分
+ */
+function formatVideoName(title) {
+  // 处理星期几的映射关系
+  const dayMap = {
+    '星期一': 'Mon',
+    '星期二': 'Tue',
+    '星期三': 'Wed',
+    '星期四': 'Thu',
+    '星期五': 'Fri',
+    '星期六': 'Sat',
+    '星期日': 'Sun',
+    '星期天': 'Sun'
+  };
+  
+  let formattedName = title;
+  
+  // 提取周数
+  const weekMatch = title.match(/第(\d+)周/);
+  let weekNumber = weekMatch ? weekMatch[1] : '';
+  
+  // 提取星期几
+  let dayName = '';
+  for (const chineseDay in dayMap) {
+    if (title.includes(chineseDay)) {
+      dayName = dayMap[chineseDay];
+      break;
+    }
+  }
+  
+  // 如果成功提取了周数和星期几，则构建新格式
+  if (weekNumber && dayName) {
+    formattedName = `Week_${weekNumber}_${dayName}`;
+  }
+  
+  return formattedName;
+}
+
 // 安全地加载URL，用于拦截处理
 function safeLoadURL(url) {
   if (!url) return;
@@ -373,7 +416,22 @@ async function extractCourseId() {
 function displayCourseInfo(courseData) {
   currentCourse = courseData;
   
+  // 设置课程名称，如果过长则使用省略号
   courseName.textContent = courseData.name;
+  courseName.title = courseData.name; // 添加完整名称作为提示
+  
+  // 检查课程名是否溢出并添加省略号
+  setTimeout(() => {
+    if (courseName.scrollWidth > courseName.clientWidth) {
+      const nameLength = courseData.name.length;
+      const estimatedVisibleChars = Math.floor(nameLength * (courseName.clientWidth / courseName.scrollWidth)) - 2;
+      if (estimatedVisibleChars > 0) {
+        courseName.textContent = courseData.name.substring(0, estimatedVisibleChars) + "……";
+        courseName.classList.add('overflow');
+      }
+    }
+  }, 0);
+  
   courseProfessor.textContent = `教师: ${courseData.professor}`;
   
   // Clear and populate video list
@@ -418,7 +476,9 @@ async function startDownload() {
   // For each selected video, start a download
   for (const index of selectedVideos) {
     const video = currentCourse.videoList[index];
-    const videoName = `${currentCourse.name}-${currentCourse.professor}-${video.title}`;
+    // 使用新的命名格式：课程名_Week_X_Day
+    const formattedTitle = formatVideoName(video.title);
+    const videoName = `${currentCourse.name}_${formattedTitle}`;
     
     // Determine video URL based on selected source
     let videoUrl;
@@ -521,7 +581,7 @@ function updateDownloadProgress(data) {
     statusElement.textContent = `下载中 ${progress}%`;
     statusElement.className = 'status status-downloading';
   } else if (status === 1) { // Converting to MP4
-    statusElement.textContent = '转换中';
+    statusElement.textContent = `转换中 ${progress}%`;
     statusElement.className = 'status status-converting';
     download.status = 'converting';
   } else if (status === 2) { // Completed
