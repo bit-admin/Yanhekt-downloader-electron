@@ -2,10 +2,20 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const { spawn } = require('child_process');
-const ffmpegStatic = require('ffmpeg-static');
 const utils = require('./utils');
 const electron = require('electron');
 const app = electron.app || (electron.remote ? electron.remote.app : null);
+
+// Only try to load the modules in development mode
+let ffmpegStatic;
+if (!app.isPackaged) {
+  try {
+    ffmpegStatic = require('ffmpeg-static');
+  } catch (error) {
+    console.error('Failed to load ffmpeg modules:', error);
+    ffmpegStatic = null;
+  }
+}
 
 // Determine correct ffmpeg path based on environment
 let ffmpegPath;
@@ -32,6 +42,8 @@ if (app && app.isPackaged) {
   ffmpegPath = ffmpegStatic;
   console.log(`Using development FFmpeg: ${ffmpegPath}`);
 }
+
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 class M3u8Downloader {
   /**
