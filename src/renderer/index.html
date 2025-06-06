@@ -101,15 +101,30 @@
     <div id="downloads-popup" class="downloads-popup">
       <div class="downloads-popup-header">
         <span class="downloads-popup-title">下载列表</span>
-        <div class="download-queue-info">
-          <span id="active-count">活跃: 0</span>
-          <span id="queued-count">队列: 0</span>
-        </div>
         <button id="close-downloads-btn" class="icon-btn" title="关闭下载列表">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
+        </button>
+      </div>
+      <div class="downloads-control-panel">
+        <div class="download-status-info">
+          <div class="status-item">
+            <span class="status-label">活跃:</span>
+            <span id="active-count" class="status-value">0</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">队列:</span>
+            <span id="queued-count" class="status-value">0</span>
+          </div>
+        </div>
+        <button id="clear-completed-btn" class="btn-clear" title="清除已完成项">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="m21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.27 0 4.33.84 5.91 2.23"></path>
+          </svg>
+          清除已完成
         </button>
       </div>
       <div id="active-downloads"></div>

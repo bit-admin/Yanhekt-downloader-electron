@@ -30,6 +30,7 @@ const downloadCountBadge = document.getElementById('download-count-badge');
 const concurrentLimitSelect = document.getElementById('concurrent-limit');
 const activeCountSpan = document.getElementById('active-count');
 const queuedCountSpan = document.getElementById('queued-count');
+const clearCompletedBtn = document.getElementById('clear-completed-btn');
 
 // Global state
 let currentCourse = null;
@@ -67,8 +68,11 @@ function updateDownloadBadge() {
  * Update queue information display
  */
 function updateQueueInfo() {
-  activeCountSpan.textContent = `活跃: ${activeDownloadSlots}`;
-  queuedCountSpan.textContent = `队列: ${downloadQueue.length}`;
+  activeCountSpan.textContent = activeDownloadSlots;
+  queuedCountSpan.textContent = downloadQueue.length;
+  
+  // Update clear completed button state
+  updateClearCompletedButton();
 }
 
 /**
@@ -363,6 +367,9 @@ function setupEventListeners() {
   
   // Add download path selection button event listener
   selectDownloadPathBtn.addEventListener('click', selectDownloadPath);
+  
+  // Add clear completed downloads button event listener
+  clearCompletedBtn.addEventListener('click', clearCompletedDownloads);
   
   // Add concurrent limit change event listener
   concurrentLimitSelect.addEventListener('change', (e) => {
@@ -937,3 +944,46 @@ async function openDownloadFolder() {
 
 // Initialize the app when the DOM is ready
 document.addEventListener('DOMContentLoaded', init);
+
+/**
+ * Update clear completed button state
+ */
+function updateClearCompletedButton() {
+  const completedCount = Array.from(downloads.values()).filter(
+    download => download.status === 'completed' || download.status === 'error' || download.status === 'cancelled'
+  ).length;
+  
+  if (completedCount > 0) {
+    clearCompletedBtn.disabled = false;
+    clearCompletedBtn.style.opacity = '1';
+    clearCompletedBtn.title = `清除 ${completedCount} 个已完成项`;
+  } else {
+    clearCompletedBtn.disabled = true;
+    clearCompletedBtn.style.opacity = '0.5';
+    clearCompletedBtn.title = '暂无已完成项';
+  }
+}
+
+/**
+ * Clear all completed downloads from the list
+ */
+function clearCompletedDownloads() {
+  const completedDownloads = Array.from(downloads.entries()).filter(
+    ([id, download]) => download.status === 'completed' || download.status === 'error' || download.status === 'cancelled'
+  );
+  
+  // Remove completed downloads from UI and downloads map
+  completedDownloads.forEach(([id, download]) => {
+    download.element.remove();
+    downloads.delete(id);
+  });
+  
+  // Update UI elements
+  updateDownloadBadge();
+  updateQueueInfo();
+  
+  console.log(`已清除 ${completedDownloads.length} 个已完成的下载项`);
+}
+
+// Clear completed downloads button event listener
+clearCompletedBtn.addEventListener('click', clearCompletedDownloads);
