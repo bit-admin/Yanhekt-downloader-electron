@@ -47,9 +47,9 @@ let maxConcurrentDownloads = 5; // Default concurrent limit
  * Update the download count badge
  */
 function updateDownloadBadge() {
-  // Count active downloads (not completed or error)
+  // Count all pending downloads (queued + downloading + converting)
   activeDownloadCount = Array.from(downloads.values()).filter(
-    download => download.status === 'downloading' || download.status === 'converting'
+    download => download.status === 'queued' || download.status === 'downloading' || download.status === 'converting'
   ).length;
   
   // Update badge text
