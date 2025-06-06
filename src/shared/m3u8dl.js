@@ -149,6 +149,13 @@ class M3u8Downloader {
    */
   stop() {
     this._shouldStop = true;
+    this._isRunning = false;
+    
+    // Clear the signature update interval immediately
+    if (this._signatureInterval) {
+      clearInterval(this._signatureInterval);
+      this._signatureInterval = null;
+    }
   }
 
   /**

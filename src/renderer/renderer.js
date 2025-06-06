@@ -97,6 +97,19 @@ async function processDownloadQueue() {
           const statusElement = download.element.querySelector('.status');
           statusElement.textContent = '下载中';
           statusElement.className = 'status status-downloading';
+          
+          // Update the cancel button event listener with the new real ID
+          const cancelBtn = download.element.querySelector('.cancel-icon');
+          if (cancelBtn) {
+            // Remove old event listener by cloning the element
+            const newCancelBtn = cancelBtn.cloneNode(true);
+            cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+            
+            // Add new event listener with the real download ID
+            newCancelBtn.addEventListener('click', () => {
+              cancelDownload(response.id);
+            });
+          }
         }
         
         // Store the real download ID
@@ -749,6 +762,11 @@ function updateDownloadProgress(data) {
   
   if (!download) return;
   
+  // Don't update progress if download has been cancelled or completed
+  if (download.status === 'cancelled' || download.status === 'completed') {
+    return;
+  }
+  
   download.progress = progress;
   
   // Update progress bar
@@ -793,6 +811,11 @@ function updateDownloadStatus(data) {
   
   if (!download) return;
   
+  // Don't update status if download has been cancelled
+  if (download.status === 'cancelled') {
+    return;
+  }
+  
   const statusElement = download.element.querySelector('.status');
   
   if (status === 'downloading-audio') {
@@ -825,6 +848,11 @@ function handleDownloadError(data) {
   const download = downloads.get(id);
   
   if (!download) return;
+  
+  // Don't update status if download has been cancelled
+  if (download.status === 'cancelled') {
+    return;
+  }
   
   const statusElement = download.element.querySelector('.status');
   statusElement.textContent = '下载失败';
@@ -956,7 +984,7 @@ function updateClearCompletedButton() {
   if (completedCount > 0) {
     clearCompletedBtn.disabled = false;
     clearCompletedBtn.style.opacity = '1';
-    clearCompletedBtn.title = `清除 ${completedCount} 个已完成项`;
+    clearCompletedBtn.title = `清除 ${completedCount} 个已完成/已取消项`;
   } else {
     clearCompletedBtn.disabled = true;
     clearCompletedBtn.style.opacity = '0.5';
@@ -982,7 +1010,7 @@ function clearCompletedDownloads() {
   updateDownloadBadge();
   updateQueueInfo();
   
-  console.log(`已清除 ${completedDownloads.length} 个已完成的下载项`);
+  console.log(`已清除 ${completedDownloads.length} 个已完成/已取消的下载项`);
 }
 
 // Clear completed downloads button event listener

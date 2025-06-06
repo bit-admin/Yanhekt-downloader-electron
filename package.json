@@ -1,6 +1,6 @@
 {
   "name": "yanhekt-downloader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Video downloader for Yanhekt",
   "main": "src/main/index.js",
   "scripts": {
