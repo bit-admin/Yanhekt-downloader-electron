@@ -63,6 +63,17 @@
                 <label><input type="radio" name="video-source" value="screen" checked>屏幕录制</label>
                 <label class="audio-checkbox"><input type="checkbox" id="download-audio">单独下载音频</label>
               </div>
+              <div class="concurrent-control">
+                <label for="concurrent-limit">并发数限制:</label>
+                <select id="concurrent-limit">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="5" selected>5</option>
+                  <option value="8">8</option>
+                  <option value="10">10</option>
+                </select>
+              </div>
               <div class="btn-row">
                 <button id="select-all-btn">全选</button>
                 <button id="start-download-btn" class="btn-secondary" disabled>下载选中</button>
@@ -90,6 +101,10 @@
     <div id="downloads-popup" class="downloads-popup">
       <div class="downloads-popup-header">
         <span class="downloads-popup-title">下载列表</span>
+        <div class="download-queue-info">
+          <span id="active-count">活跃: 0</span>
+          <span id="queued-count">队列: 0</span>
+        </div>
         <button id="close-downloads-btn" class="icon-btn" title="关闭下载列表">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>

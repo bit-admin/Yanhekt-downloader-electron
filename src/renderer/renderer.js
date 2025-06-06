@@ -27,6 +27,9 @@ const downloadPathInput = document.getElementById('download-path');
 const downloadPathStatus = document.getElementById('download-path-status');
 const selectDownloadPathBtn = document.getElementById('select-download-path-btn');
 const downloadCountBadge = document.getElementById('download-count-badge');
+const concurrentLimitSelect = document.getElementById('concurrent-limit');
+const activeCountSpan = document.getElementById('active-count');
+const queuedCountSpan = document.getElementById('queued-count');
 
 // Global state
 let currentCourse = null;
@@ -34,6 +37,11 @@ let selectedVideos = new Set();
 let downloads = new Map();
 let currentDownloadPath = '';
 let activeDownloadCount = 0; // Track active download count
+
+// Download queue system
+let downloadQueue = [];
+let activeDownloadSlots = 0;
+let maxConcurrentDownloads = 5; // Default concurrent limit
 
 /**
  * Update the download count badge
@@ -52,6 +60,63 @@ function updateDownloadBadge() {
     downloadCountBadge.classList.add('visible');
   } else {
     downloadCountBadge.classList.remove('visible');
+  }
+}
+
+/**
+ * Update queue information display
+ */
+function updateQueueInfo() {
+  activeCountSpan.textContent = `活跃: ${activeDownloadSlots}`;
+  queuedCountSpan.textContent = `队列: ${downloadQueue.length}`;
+}
+
+/**
+ * Process download queue - start next download if slots available
+ */
+async function processDownloadQueue() {
+  while (downloadQueue.length > 0 && activeDownloadSlots < maxConcurrentDownloads) {
+    const downloadTask = downloadQueue.shift();
+    activeDownloadSlots++;
+    
+    updateQueueInfo();
+    
+    try {
+      // Start the actual download
+      const response = await ipcRenderer.invoke('start-download', downloadTask.options);
+      
+      if (response.success) {
+        // Update download item status
+        const download = downloads.get(downloadTask.id);
+        if (download) {
+          download.status = 'downloading';
+          const statusElement = download.element.querySelector('.status');
+          statusElement.textContent = '下载中';
+          statusElement.className = 'status status-downloading';
+        }
+        
+        // Store the real download ID
+        downloadTask.realId = response.id;
+        downloads.set(response.id, downloads.get(downloadTask.id));
+        downloads.delete(downloadTask.id);
+      } else {
+        // Download failed to start
+        const download = downloads.get(downloadTask.id);
+        if (download) {
+          download.status = 'error';
+          const statusElement = download.element.querySelector('.status');
+          statusElement.textContent = '启动失败';
+          statusElement.className = 'status status-error';
+        }
+        
+        activeDownloadSlots--;
+        updateQueueInfo();
+      }
+    } catch (error) {
+      console.error('Failed to start download:', error);
+      activeDownloadSlots--;
+      updateQueueInfo();
+    }
   }
 }
 
@@ -135,6 +200,9 @@ async function init() {
   
   // Initialize download badge (hidden by default)
   updateDownloadBadge();
+  
+  // Initialize queue info display
+  updateQueueInfo();
 }
 
 // Load and display download path
@@ -295,6 +363,14 @@ function setupEventListeners() {
   
   // Add download path selection button event listener
   selectDownloadPathBtn.addEventListener('click', selectDownloadPath);
+  
+  // Add concurrent limit change event listener
+  concurrentLimitSelect.addEventListener('change', (e) => {
+    maxConcurrentDownloads = parseInt(e.target.value);
+    console.log('并发限制更新为:', maxConcurrentDownloads);
+    // Process queue in case new slots are available
+    processDownloadQueue();
+  });
   
   // Set up IPC event listeners for download progress and status updates
   ipcRenderer.on('download-progress', (event, data) => {
@@ -543,7 +619,7 @@ async function startDownload() {
   const videoSource = document.querySelector('input[name="video-source"]:checked').value;
   const downloadAudio = downloadAudioCheckbox.checked;
   
-  // For each selected video, start a download
+  // For each selected video, add to download queue
   for (const index of selectedVideos) {
     const video = currentCourse.videoList[index];
     // Use the new naming format: CourseName_Week_X_Day
@@ -566,27 +642,35 @@ async function startDownload() {
       audioUrl = await ipcRenderer.invoke('get-audio-url', video.video_ids[0]);
     }
     
-    // Start the download process
-    const response = await ipcRenderer.invoke('start-download', {
-      videoUrl,
-      workDir: currentDownloadPath || `output/${currentCourse.name}-${videoSource === 'camera' ? 'video' : 'screen'}`,
-      name: videoName,
-      audioUrl,
-      videoId: video.video_ids ? video.video_ids[0] : null,
-      downloadAudio
-    });
+    // Create a unique temporary ID for the queue item
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    if (response.success) {
-      // Create download item in UI
-      createDownloadItem(response.id, videoName);
-    } else {
-      alert(`开始下载失败: ${response.error}`);
-    }
+    // Create download item in UI with queued status
+    createDownloadItem(tempId, videoName, true); // true means queued
+    
+    // Add to download queue
+    const downloadTask = {
+      id: tempId,
+      options: {
+        videoUrl,
+        workDir: currentDownloadPath || `output/${currentCourse.name}-${videoSource === 'camera' ? 'video' : 'screen'}`,
+        name: videoName,
+        audioUrl,
+        videoId: video.video_ids ? video.video_ids[0] : null,
+        downloadAudio
+      }
+    };
+    
+    downloadQueue.push(downloadTask);
   }
+  
+  // Update queue info and start processing
+  updateQueueInfo();
+  processDownloadQueue();
 }
 
 // Create a download item in the UI
-function createDownloadItem(id, name) {
+function createDownloadItem(id, name, isQueued = false) {
   const downloadItem = document.createElement('div');
   downloadItem.className = 'download-item';
   downloadItem.id = `download-${id}`;
@@ -596,8 +680,13 @@ function createDownloadItem(id, name) {
   nameElement.textContent = name;
   
   const statusElement = document.createElement('span');
-  statusElement.className = 'status status-downloading';
-  statusElement.textContent = '下载中';
+  if (isQueued) {
+    statusElement.className = 'status status-queued';
+    statusElement.textContent = '队列中';
+  } else {
+    statusElement.className = 'status status-downloading';
+    statusElement.textContent = '下载中';
+  }
   nameElement.appendChild(statusElement);
   
   const progressContainer = document.createElement('div');
@@ -637,7 +726,7 @@ function createDownloadItem(id, name) {
   // Store download info
   downloads.set(id, {
     name,
-    status: 'downloading',
+    status: isQueued ? 'queued' : 'downloading',
     progress: 0,
     element: downloadItem
   });
@@ -675,10 +764,15 @@ function updateDownloadProgress(data) {
     download.status = 'completed';
     
     // Remove cancel button
-    const cancelBtn = download.element.querySelector('button');
+    const cancelBtn = download.element.querySelector('.cancel-icon');
     if (cancelBtn) {
       cancelBtn.remove();
     }
+    
+    // Release download slot and process queue
+    activeDownloadSlots--;
+    updateQueueInfo();
+    processDownloadQueue();
     
     // Update badge count since a download has completed
     updateDownloadBadge();
@@ -703,10 +797,15 @@ function updateDownloadStatus(data) {
     download.status = 'completed';
     
     // Remove cancel button
-    const cancelBtn = download.element.querySelector('button');
+    const cancelBtn = download.element.querySelector('.cancel-icon');
     if (cancelBtn) {
       cancelBtn.remove();
     }
+    
+    // Release download slot and process queue
+    activeDownloadSlots--;
+    updateQueueInfo();
+    processDownloadQueue();
     
     // Update badge count since a download has completed
     updateDownloadBadge();
@@ -734,31 +833,60 @@ function handleDownloadError(data) {
   
   download.element.appendChild(errorElement);
   
+  // Release download slot if this was an active download
+  if (activeDownloadSlots > 0) {
+    activeDownloadSlots--;
+    updateQueueInfo();
+    processDownloadQueue();
+  }
+  
   // Update badge count since a download has errored
   updateDownloadBadge();
 }
 
 // Cancel an active download
 async function cancelDownload(id) {
+  const download = downloads.get(id);
+  if (!download) return;
+  
+  // Check if this is a queued download
+  if (download.status === 'queued') {
+    // Remove from queue
+    downloadQueue = downloadQueue.filter(task => task.id !== id);
+    
+    // Remove from UI
+    downloads.delete(id);
+    download.element.remove();
+    
+    updateQueueInfo();
+    updateDownloadBadge();
+    return;
+  }
+  
+  // For active downloads, invoke the cancel on the main process
   const result = await ipcRenderer.invoke('cancel-download', id);
   
   if (result.success) {
-    const download = downloads.get(id);
-    if (download) {
-      const statusElement = download.element.querySelector('.status');
-      statusElement.textContent = '已取消';
-      statusElement.className = 'status status-error';
-      download.status = 'cancelled';
-      
-      // Remove cancel button
-      const cancelBtn = download.element.querySelector('button');
-      if (cancelBtn) {
-        cancelBtn.remove();
-      }
-      
-      // Update badge count since a download was canceled
-      updateDownloadBadge();
+    const statusElement = download.element.querySelector('.status');
+    statusElement.textContent = '已取消';
+    statusElement.className = 'status status-error';
+    download.status = 'cancelled';
+    
+    // Remove cancel button
+    const cancelBtn = download.element.querySelector('.cancel-icon');
+    if (cancelBtn) {
+      cancelBtn.remove();
     }
+    
+    // Release download slot and process queue
+    if (activeDownloadSlots > 0) {
+      activeDownloadSlots--;
+      updateQueueInfo();
+      processDownloadQueue();
+    }
+    
+    // Update badge count since a download was canceled
+    updateDownloadBadge();
   } else {
     alert('取消下载失败: ' + result.error);
   }
