@@ -32,6 +32,14 @@ const activeCountSpan = document.getElementById('active-count');
 const queuedCountSpan = document.getElementById('queued-count');
 const clearCompletedBtn = document.getElementById('clear-completed-btn');
 
+// Intranet Mode Related Elements
+const intranetEnabledCheckbox = document.getElementById('intranet-enabled');
+const intranetConfig = document.getElementById('intranet-config');
+const videoServerIPInput = document.getElementById('video-server-ip');
+const apiServerIPInput = document.getElementById('api-server-ip');
+const saveIntranetBtn = document.getElementById('save-intranet-btn');
+const testIntranetBtn = document.getElementById('test-intranet-btn');
+
 // Global state
 let currentCourse = null;
 let selectedVideos = new Set();
@@ -208,6 +216,9 @@ async function init() {
   
   // Load and display the current download path
   loadDownloadPath();
+  
+  // Load intranet settings
+  await loadIntranetSettings();
   
   // Set up event listeners
   setupEventListeners();
@@ -391,6 +402,11 @@ function setupEventListeners() {
     // Process queue in case new slots are available
     processDownloadQueue();
   });
+  
+  // Intranet Mode Event Listener
+  intranetEnabledCheckbox.addEventListener('change', toggleIntranetMode);
+  saveIntranetBtn.addEventListener('click', saveIntranetSettings);
+  testIntranetBtn.addEventListener('click', testIntranetConnection);
   
   // Set up IPC event listeners for download progress and status updates
   ipcRenderer.on('download-progress', (event, data) => {
@@ -1015,3 +1031,193 @@ function clearCompletedDownloads() {
 
 // Clear completed downloads button event listener
 clearCompletedBtn.addEventListener('click', clearCompletedDownloads);
+
+/**
+ * Intranet Mode Related Functions
+ */
+
+// Loading intranet mode settings
+async function loadIntranetSettings() {
+  try {
+    const intranetMode = await ipcRenderer.invoke('get-intranet-mode');
+    updateIntranetUI(intranetMode);
+  } catch (error) {
+    console.error('加载内网模式设置失败:', error);
+  }
+}
+
+// Update Intranet Mode UI
+function updateIntranetUI(intranetMode) {
+  intranetEnabledCheckbox.checked = intranetMode.enabled;
+  videoServerIPInput.value = intranetMode.videoServerIP || '10.0.34.24';
+  apiServerIPInput.value = intranetMode.apiServerIP || '10.0.34.22';
+  
+  // Update Config Display
+  if (intranetMode.enabled) {
+    intranetConfig.style.display = 'block';
+  } else {
+    intranetConfig.style.display = 'none';
+  }
+}
+
+// Switch to intranet mode
+async function toggleIntranetMode() {
+  const enabled = intranetEnabledCheckbox.checked;
+  
+  if (enabled) {
+    // Show configuration options when enabled and save the enabled status immediately
+    intranetConfig.style.display = 'block';
+    await saveIntranetSettings();
+  } else {
+    // Hide configuration options when disabled and save the disabled state immediately
+    intranetConfig.style.display = 'none';
+    await saveIntranetSettings();
+  }
+}
+
+// Save Intranet Mode Settings
+async function saveIntranetSettings() {
+  try {
+    const enabled = intranetEnabledCheckbox.checked;
+    const videoServerIP = videoServerIPInput.value.trim() || '10.0.34.24';
+    const apiServerIP = apiServerIPInput.value.trim() || '10.0.34.22';
+    
+    const response = await ipcRenderer.invoke('set-intranet-mode', enabled, videoServerIP, apiServerIP);
+    
+    if (response.success) {
+      // Update UI status
+      updateIntranetUI({ enabled, videoServerIP, apiServerIP });
+      
+      // Display save successful prompt
+      showNotification('设置已保存', 'success');
+      
+      if (enabled) {
+        console.log(`内网模式已启用: 视频服务器=${videoServerIP}, API服务器=${apiServerIP}`);
+      } else {
+        console.log('内网模式已禁用');
+      }
+    } else {
+      showNotification('保存失败: ' + response.error, 'error');
+    }
+  } catch (error) {
+    console.error('保存内网模式设置失败:', error);
+    showNotification('保存失败', 'error');
+  }
+}
+
+// Test intranet connection
+async function testIntranetConnection() {
+  try {
+    testIntranetBtn.disabled = true;
+    testIntranetBtn.textContent = '测试中...';
+    
+    const videoServerIP = videoServerIPInput.value.trim() || '10.0.34.24';
+    const apiServerIP = apiServerIPInput.value.trim() || '10.0.34.22';
+    
+    // Call the real test function of the main process
+    const results = await ipcRenderer.invoke('test-intranet-connection', videoServerIP, apiServerIP);
+    
+    // Analyze test results
+    const videoSuccess = results.videoServer.success;
+    const apiSuccess = results.apiServer.success;
+    
+    let message = '连接测试结果:\n';
+    
+    // Video Server Test Results
+    if (videoSuccess) {
+      message += `✅ 视频服务器 (${videoServerIP}): 连接成功 (${results.videoServer.responseTime}ms)`;
+      if (results.videoServer.error) {
+        message += ` - ${results.videoServer.error}`;
+      }
+    } else {
+      message += `❌ 视频服务器 (${videoServerIP}): 连接失败 - ${results.videoServer.error}`;
+    }
+    
+    message += '\n';
+    
+    // API Server Test Results
+    if (apiSuccess) {
+      message += `✅ API服务器 (${apiServerIP}): 连接成功 (${results.apiServer.responseTime}ms)`;
+      if (results.apiServer.error) {
+        message += ` - ${results.apiServer.error}`;
+      }
+    } else {
+      message += `❌ API服务器 (${apiServerIP}): 连接失败 - ${results.apiServer.error}`;
+    }
+    
+    // Show results
+    const allSuccess = videoSuccess && apiSuccess;
+    showNotification(message, allSuccess ? 'success' : 'error');
+    
+    // If the test is successful, it is recommended to enable intranet mode.
+    if (allSuccess && !intranetEnabledCheckbox.checked) {
+      setTimeout(() => {
+        showNotification('建议启用内网模式以获得更好性能', 'success');
+      }, 3500);
+    }
+    
+  } catch (error) {
+    console.error('连接测试失败:', error);
+    showNotification('连接测试失败: ' + error.message, 'error');
+  } finally {
+    testIntranetBtn.disabled = false;
+    testIntranetBtn.textContent = '测试连接';
+  }
+}
+
+// Show notification popup
+function showNotification(message, type = 'success', duration = 5000) {
+  // Remove existing notifications
+  const existingNotifications = document.querySelectorAll('.notification-popup');
+  existingNotifications.forEach(notification => notification.remove());
+  
+  // Create notification popup
+  const notification = document.createElement('div');
+  notification.className = `notification-popup ${type}`;
+  
+  // Create notification content
+  const content = document.createElement('div');
+  content.className = 'notification-content';
+  
+  // Add icon based on type
+  const icon = document.createElement('div');
+  icon.className = 'notification-icon';
+  if (type === 'success') {
+    icon.innerHTML = '✓';
+  } else if (type === 'error') {
+    icon.innerHTML = '✗';
+  } else {
+    icon.innerHTML = 'ℹ';
+  }
+  
+  // Add message
+  const messageElement = document.createElement('div');
+  messageElement.className = 'notification-message';
+  messageElement.textContent = message;
+  
+  // Add close button
+  const closeButton = document.createElement('button');
+  closeButton.className = 'notification-close';
+  closeButton.innerHTML = '×';
+  closeButton.onclick = () => notification.remove();
+  
+  // Assemble notification
+  content.appendChild(icon);
+  content.appendChild(messageElement);
+  content.appendChild(closeButton);
+  notification.appendChild(content);
+  
+  // Add to body
+  document.body.appendChild(notification);
+  
+  // Show with animation
+  setTimeout(() => notification.classList.add('show'), 10);
+  
+  // Auto-remove after duration
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.classList.remove('show');
+      setTimeout(() => notification.remove(), 300);
+    }
+  }, duration);
+}

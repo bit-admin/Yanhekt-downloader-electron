@@ -62,8 +62,17 @@ function loadUserSettings() {
     const configPath = path.join(app.getPath('userData'), 'config.json');
     if (fs.existsSync(configPath)) {
       const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      
+      // Load Download Path Settings
       if (config.downloadPath && fs.existsSync(config.downloadPath)) {
         userDownloadPath = config.downloadPath;
+      }
+      
+      // Loading intranet mode settings
+      if (config.intranetMode) {
+        const { enabled, videoServerIP, apiServerIP } = config.intranetMode;
+        utils.setIntranetMode(enabled, videoServerIP, apiServerIP);
+        console.log('已从配置文件加载内网模式设置:', config.intranetMode);
       }
     }
   } catch (error) {
@@ -370,4 +379,121 @@ ipcMain.handle('get-audio-url', async (event, videoId) => {
     console.error('Error in get-audio-url handler:', error);
     return '';
   }
+});
+
+// Intranet Mode Related IPC Processing
+ipcMain.handle('get-intranet-mode', async () => {
+  try {
+    return utils.getIntranetMode();
+  } catch (error) {
+    console.error('Error getting intranet mode:', error);
+    return { enabled: false, videoServerIP: '10.0.34.24', apiServerIP: '10.0.34.22', ignoreSSLErrors: true };
+  }
+});
+
+ipcMain.handle('set-intranet-mode', async (event, enabled, videoServerIP, apiServerIP) => {
+  try {
+    utils.setIntranetMode(enabled, videoServerIP || '10.0.34.24', apiServerIP || '10.0.34.22');
+    
+    // Save settings to configuration file
+    const configPath = path.join(app.getPath('userData'), 'config.json');
+    let config = {};
+    
+    if (fs.existsSync(configPath)) {
+      try {
+        const configData = fs.readFileSync(configPath, 'utf8');
+        config = JSON.parse(configData);
+      } catch (error) {
+        console.warn('Failed to parse config file:', error);
+      }
+    }
+    
+    config.intranetMode = {
+      enabled,
+      videoServerIP: videoServerIP || '10.0.34.24',
+      apiServerIP: apiServerIP || '10.0.34.22'
+    };
+    
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error setting intranet mode:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Test intranet connection
+ipcMain.handle('test-intranet-connection', async (event, videoServerIP, apiServerIP) => {
+  const axios = require('axios');
+  const https = require('https');
+  
+  // Create an axios instance that ignores SSL certificates
+  const testAxios = axios.create({
+    timeout: 5000,
+    httpsAgent: new https.Agent({ 
+      rejectUnauthorized: false 
+    })
+  });
+  
+  const results = {
+    videoServer: { success: false, error: '', responseTime: 0 },
+    apiServer: { success: false, error: '', responseTime: 0 }
+  };
+  
+  // Test Video Server
+  const videoStartTime = Date.now();
+  try {
+    const videoTestUrl = `https://${videoServerIP}/`;
+    
+    await testAxios.get(videoTestUrl, {
+      headers: {
+        'Host': 'cvideo.yanhekt.cn',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+    
+    results.videoServer.success = true;
+    results.videoServer.responseTime = Date.now() - videoStartTime;
+  } catch (error) {
+    results.videoServer.error = error.code || error.message;
+    results.videoServer.responseTime = Date.now() - videoStartTime;
+    
+    if (error.response) {
+      // Even if an HTTP error status code is returned, it indicates that the server is reachable.
+      if (error.response.status >= 200 && error.response.status < 600) {
+        results.videoServer.success = true;
+        results.videoServer.error = `HTTP ${error.response.status}`;
+      }
+    }
+  }
+  
+  // Test API Server
+  const apiStartTime = Date.now();
+  try {
+    const apiTestUrl = `https://${apiServerIP}/`;
+    
+    await testAxios.get(apiTestUrl, {
+      headers: {
+        'Host': 'cbiz.yanhekt.cn',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+    
+    results.apiServer.success = true;
+    results.apiServer.responseTime = Date.now() - apiStartTime;
+  } catch (error) {
+    results.apiServer.error = error.code || error.message;
+    results.apiServer.responseTime = Date.now() - apiStartTime;
+    
+    if (error.response) {
+      // Even if an HTTP error status code is returned, it indicates that the server is reachable.
+      if (error.response.status >= 200 && error.response.status < 600) {
+        results.apiServer.success = true;
+        results.apiServer.error = `HTTP ${error.response.status}`;
+      }
+    }
+  }
+  
+  return results;
 });

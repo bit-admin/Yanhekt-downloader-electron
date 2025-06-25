@@ -194,7 +194,8 @@ class M3u8Downloader {
         this._signature
       );
       
-      const response = await axios.get(url, {
+      // Use the axios instance supported by intranet mode
+      const response = await utils.axiosInstance.get(url, {
         timeout: 30000,
         validateStatus: null,
         headers: this._headers
@@ -362,7 +363,7 @@ class M3u8Downloader {
         return;
       }
       
-      const response = await axios.get(tsUrl, {
+      const response = await utils.axiosInstance.get(tsUrl, {
         responseType: 'arraybuffer',
         timeout: 60000,
         headers: this._headers
@@ -413,7 +414,7 @@ class M3u8Downloader {
         trueKeyUrl = this._url.substring(0, this._url.lastIndexOf('/') + 1) + mayKeyUrl;
       }
       
-      const response = await axios.get(trueKeyUrl, {
+      const response = await utils.axiosInstance.get(trueKeyUrl, {
         responseType: 'arraybuffer',
         timeout: 30000,
         headers: this._headers

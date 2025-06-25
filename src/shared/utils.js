@@ -9,6 +9,20 @@ const magic = "1138b69dfef641d9d7ba49137d2d4875";
 // Add authentication token variable in memory
 let inMemoryAuthToken = "";
 
+// Intranet Mode Configuration
+let intranetMode = {
+  enabled: false,
+  videoServerIP: "10.0.34.24", // cvideo.yanhekt.cn
+  apiServerIP: "10.0.34.22", // cbiz.yanhekt.cn
+  ignoreSSLErrors: true // Ignore SSL certificate errors
+};
+
+// Domain to IP Mapping
+const domainIPMap = {
+  "cvideo.yanhekt.cn": () => intranetMode.videoServerIP,
+  "cbiz.yanhekt.cn": () => intranetMode.apiServerIP
+};
+
 const headers = {
   "Origin": "https://www.yanhekt.cn",
   "Referer": "https://www.yanhekt.cn/",
@@ -54,11 +68,11 @@ function getSignature() {
 async function getToken() {
   updateHeaders();
   try {
-    const response = await axios.get("https://cbiz.yanhekt.cn/v1/auth/video/token?id=0", { headers });
+    const response = await axiosInstance.get("https://cbiz.yanhekt.cn/v1/auth/video/token?id=0", { headers });
     const data = response.data.data;
     if (!data) {
       readAuth();
-      const retryResponse = await axios.get("https://cbiz.yanhekt.cn/v1/auth/video/token?id=0", { headers });
+      const retryResponse = await axiosInstance.get("https://cbiz.yanhekt.cn/v1/auth/video/token?id=0", { headers });
       const retryData = retryResponse.data.data;
       if (!retryData) {
         throw new Error("获取 Token 失败");
@@ -116,7 +130,7 @@ function removeAuth() {
 async function testAuth(courseID) {
   updateHeaders();
   try {
-    const response = await axios.get(
+    const response = await axiosInstance.get(
       `https://cbiz.yanhekt.cn/v2/course/session/list?course_id=${courseID}`,
       { headers }
     );
@@ -133,12 +147,12 @@ async function getCourseInfo(courseID) {
   updateHeaders();
 
   try {
-    const courseResponse = await axios.get(
+    const courseResponse = await axiosInstance.get(
       `https://cbiz.yanhekt.cn/v1/course?id=${courseID}&with_professor_badges=true`,
       { headers }
     );
     
-    const sessionResponse = await axios.get(
+    const sessionResponse = await axiosInstance.get(
       `https://cbiz.yanhekt.cn/v2/course/session/list?course_id=${courseID}`,
       { headers }
     );
@@ -170,7 +184,7 @@ async function getCourseInfo(courseID) {
 async function getAudioUrl(videoId) {
   updateHeaders();
   try {
-    const response = await axios.get(
+    const response = await axiosInstance.get(
       `https://cbiz.yanhekt.cn/v1/video?id=${videoId}`,
       { headers }
     );
@@ -189,14 +203,14 @@ async function downloadAudio(url, outputPath, name) {
     
     const customHeaders = { ...headers, "Host": "cvideo.yanhekt.cn" };
     
-    let response = await axios.get(signedUrl, { 
+    let response = await axiosInstance.get(signedUrl, { 
       headers: customHeaders,
       responseType: 'arraybuffer'
     });
     
     while (response.status !== 200) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      response = await axios.get(signedUrl, { 
+      response = await axiosInstance.get(signedUrl, { 
         headers: customHeaders,
         responseType: 'arraybuffer'
       });
@@ -273,6 +287,91 @@ function getAuthFromWebview(webview) {
   });
 }
 
+// Intranet Mode Related Functions
+function setIntranetMode(enabled, videoServerIP = "10.0.34.24", apiServerIP = "10.0.34.22") {
+  intranetMode.enabled = enabled;
+  intranetMode.videoServerIP = videoServerIP;
+  intranetMode.apiServerIP = apiServerIP;
+  
+  if (enabled) {
+    console.log(`内网模式已启用:`);
+    console.log(`  视频服务器: cvideo.yanhekt.cn -> ${videoServerIP}`);
+    console.log(`  API服务器: cbiz.yanhekt.cn -> ${apiServerIP}`);
+  } else {
+    console.log("内网模式已禁用");
+  }
+}
+
+function getIntranetMode() {
+  return { ...intranetMode };
+}
+
+// URL Rewrite Function - Replace Domain with Internal IP but Keep Host Header
+function rewriteUrlForIntranet(url) {
+  if (!intranetMode.enabled) {
+    return url;
+  }
+  
+  try {
+    const urlObj = new URL(url);
+    const originalHost = urlObj.hostname;
+    
+    // 检查是否需要重写这个域名
+    if (domainIPMap[originalHost]) {
+      const ip = domainIPMap[originalHost]();
+      if (ip) {
+        urlObj.hostname = ip;
+        console.log(`URL重写: ${originalHost} -> ${ip}`);
+        return urlObj.toString();
+      }
+    }
+    
+    return url;
+  } catch (error) {
+    console.error("URL重写失败:", error);
+    return url;
+  }
+}
+
+// Create an axios instance with intranet mode support
+function createAxiosInstance() {
+  const instance = axios.create({
+    timeout: 30000,
+    // Ignore SSL certificate errors in intranet mode
+    httpsAgent: intranetMode.enabled && intranetMode.ignoreSSLErrors ? 
+      new (require('https').Agent)({ rejectUnauthorized: false }) : undefined
+  });
+  
+  // Request Interceptor - Rewrite URL and Set Correct Host Header
+  instance.interceptors.request.use((config) => {
+    if (intranetMode.enabled && config.url) {
+      const originalUrl = config.url;
+      const rewrittenUrl = rewriteUrlForIntranet(originalUrl);
+      
+      if (rewrittenUrl !== originalUrl) {
+        // Extract the original domain as the Host header
+        try {
+          const originalHost = new URL(originalUrl).hostname;
+          config.url = rewrittenUrl;
+          config.headers = config.headers || {};
+          config.headers['Host'] = originalHost;
+          
+          console.log(`请求重写: ${originalUrl} -> ${rewrittenUrl} (Host: ${originalHost})`);
+        } catch (error) {
+          console.error("设置Host头失败:", error);
+        }
+      }
+    }
+    
+    return config;
+  });
+  
+  return instance;
+}
+
+// Replace the default axios call
+const axiosInstance = createAxiosInstance();
+
 module.exports = {
   headers,
   updateHeaders,
@@ -289,5 +388,9 @@ module.exports = {
   getAudioUrl,
   downloadAudio,
   extractCourseId,
-  getAuthFromWebview
+  getAuthFromWebview,
+  setIntranetMode,
+  getIntranetMode,
+  rewriteUrlForIntranet,
+  axiosInstance
 };

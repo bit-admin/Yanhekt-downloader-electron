@@ -10,6 +10,42 @@
   <div class="container">
     <div class="left-panel">
       <div class="left-panel-content">
+
+        <div class="section compact-section" id="intranet-section">
+          <div class="section-header">
+            <span class="section-title">内网模式</span>
+            <div class="toggle-row header-toggle">
+              <label class="toggle-switch">
+                <input type="checkbox" id="intranet-enabled">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="intranet-form compact-form">
+            <div class="intranet-help-text">
+              <p>连接到校园网时，启用内网模式可提升连接速率及稳定性</p>
+            </div>
+            <div class="intranet-config" id="intranet-config" style="display: none;">
+              <div class="ip-row">
+                <div class="input-group compact-input ip-input">
+                  <label for="video-server-ip">视频服务器IP</label>
+                  <input type="text" id="video-server-ip" placeholder="10.0.34.24" value="10.0.34.24">
+                  <div class="hint-text">cvideo.yanhekt.cn</div>
+                </div>
+                <div class="input-group compact-input ip-input">
+                  <label for="api-server-ip">API服务器IP</label>
+                  <input type="text" id="api-server-ip" placeholder="10.0.34.22" value="10.0.34.22">
+                  <div class="hint-text">cbiz.yanhekt.cn</div>
+                </div>
+              </div>
+              <div class="btn-row">
+                <button id="save-intranet-btn">保存</button>
+                <button id="test-intranet-btn" class="btn-secondary">测试连接</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="section compact-section" id="downloads-section">
           <div class="section-header">
             <span class="section-title">下载目录</span>
