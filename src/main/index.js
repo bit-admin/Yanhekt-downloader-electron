@@ -149,6 +149,14 @@ function createApplicationMenu() {
       ]
     },
     {
+      label: 'Edit',
+      submenu: [
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectall' }
+      ]
+    },
+    {
       label: 'View',
       submenu: [
         { role: 'reload', label: 'Reload' },
