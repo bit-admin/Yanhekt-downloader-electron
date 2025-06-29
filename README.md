@@ -124,3 +124,7 @@ Yanhekt Downloader 是一个基于 Electron 开发的桌面应用程序，专为
 ## 致谢
 
 特别感谢 [AuYang261/BIT_yanhe_download](https://github.com/AuYang261/BIT_yanhe_download) 项目提供的思路和参考。
+
+## 联系我们
+
+如需报告问题或提出建议，请发送邮件至：[info@bitech.edu.kg](mailto:info@bitech.edu.kg)
